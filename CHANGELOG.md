@@ -28,5 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Quality gates** — Laravel Pint (style) and PHPStan level 6 (types) wired
   into CI across PHP 8.2–8.4 and Laravel 12–13.
 
+### Fixed
+
+- **CI** — Laravel 13 test rows now run on PHP 8.4 (Pest 5 and
+  `pest-plugin-laravel` v5 require PHP >= 8.4), and `orchestra/testbench` is
+  pinned with `--dev` so it stays in `require-dev` instead of leaking into the
+  runtime dependencies.
+- **Composer constraints** — widened to `pestphp/pest: ^3.8|^5.0` and
+  `pestphp/pest-plugin-laravel: ^3.2|^5.0` so Laravel 12 uses Pest 3 and
+  Laravel 13 uses Pest 5.
+
 _No stable API is offered yet. Everything above is subject to change while the
 package is in early development (`0.x`)._

@@ -32,8 +32,8 @@
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.9",
         "orchestra/testbench": "^10.0|^11.0",
-        "pestphp/pest": "^3.8",
-        "pestphp/pest-plugin-laravel": "^3.2"
+        "pestphp/pest": "^3.8|^5.0",
+        "pestphp/pest-plugin-laravel": "^3.2|^5.0"
     },
     "autoload": {
         "psr-4": {
