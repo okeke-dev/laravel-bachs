@@ -1,0 +1,80 @@
+{
+    "name": "okeke-dev/laravel-bachs",
+    "description": "An independent, community-maintained Laravel integration for Bachs.io: Billable, subscriptions, checkout, webhooks, and more.",
+    "keywords": [
+        "bachs",
+        "laravel",
+        "payments",
+        "billing",
+        "subscriptions",
+        "checkout",
+        "saas"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Okeke Chimezie Glory",
+            "homepage": "https://github.com/okekechimezieglory"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/config": "^12.0|^13.0",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/events": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/routing": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.9",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.8",
+        "pestphp/pest-plugin-laravel": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "OkekeDev\\Bachs\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OkekeDev\\Bachs\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "pestphp/pest-plugin-laravel": true,
+            "pestphp/pest-plugin-arch": true,
+            "pestphp/pest-plugin-mutate": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "OkekeDev\\Bachs\\BachsServiceProvider"
+            ],
+            "aliases": {
+                "Bachs": "OkekeDev\\Bachs\\Facades\\Bachs"
+            }
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test:types": "vendor/bin/phpstan analyse",
+        "test:style": "vendor/bin/pint --test",
+        "format": "vendor/bin/pint",
+        "check": [
+            "@test",
+            "@test:types",
+            "@test:style"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
