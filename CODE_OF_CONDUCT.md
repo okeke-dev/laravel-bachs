@@ -44,7 +44,7 @@ when an individual is officially representing the community in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainers at `okeke.chimezieglory@gmail.com`.
+reported to the project maintainers at `okekechimezieglory@gmail.com`.
 
 All complaints will be reviewed and investigated promptly and fairly. Project
 maintainers who do not follow or enforce the Code of Conduct in good faith may

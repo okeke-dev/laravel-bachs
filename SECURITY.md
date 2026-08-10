@@ -9,7 +9,7 @@
 ## Reporting a vulnerability
 
 Please **do not** report security issues publicly. Email the maintainer at
-`okeke.chimezieglory@gmail.com` with as much detail as possible.
+`okekechimezieglory@gmail.com` with as much detail as possible.
 
 You should receive an acknowledgement within 48 hours and a fix plan within
 5 business days. Public disclosure happens after a patched release ships.
