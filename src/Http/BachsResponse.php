@@ -39,11 +39,23 @@ class BachsResponse
     }
 
     /**
-     * The decoded JSON payload.
+     * The decoded JSON payload, or a value extracted by a dot-notated key.
+     *
+     * @return array<mixed>|mixed
+     */
+    public function json(?string $key = null, mixed $default = null): mixed
+    {
+        $payload = $this->response->json() ?? [];
+
+        return $key === null ? $payload : data_get($payload, $key, $default);
+    }
+
+    /**
+     * The decoded JSON payload, as an array.
      *
      * @return array<mixed>
      */
-    public function json(): array
+    public function toArray(): array
     {
         return $this->response->json() ?? [];
     }

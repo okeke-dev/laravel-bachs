@@ -46,6 +46,24 @@ it('sends an authenticated request and wraps the response', function () {
         ->and($response->json())->toBe(['items' => []]);
 });
 
+it('exposes the decoded payload as an array and by dotted key', function () {
+    Http::fake([
+        '*' => Http::response([
+            'id' => 'prod_1',
+            'price' => ['amount' => '29.00'],
+        ], 200),
+    ]);
+
+    $response = bachsTestClient()->get('products/prod_1');
+
+    expect($response->toArray())->toBe([
+        'id' => 'prod_1',
+        'price' => ['amount' => '29.00'],
+    ])->and($response->json('price.amount'))->toBe('29.00')
+        ->and($response->json('missing', 'fallback'))->toBe('fallback')
+        ->and($response->json('price.missing', null))->toBeNull();
+});
+
 it('sends json bodies with an idempotency key on mutations', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/customers*' => Http::response(['customer_id' => 'cust_123'], 201),
