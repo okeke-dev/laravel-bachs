@@ -5,6 +5,8 @@ namespace OkekeDev\Bachs;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 use OkekeDev\Bachs\Contracts\BachsFactory;
+use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
+use OkekeDev\Bachs\Resources\BachsResource;
 
 class BachsServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,22 @@ class BachsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/bachs.php' => $this->app->configPath('bachs.php'),
             ], 'bachs-config');
+        }
+
+        $this->registerDefaultResourceClient();
+    }
+
+    /**
+     * Seed static resource calls (`Products::create(...)`) with the default
+     * connection's client. If Bachs is not configured yet, resource calls will
+     * raise a helpful error when they run instead of breaking application boot.
+     */
+    protected function registerDefaultResourceClient(): void
+    {
+        try {
+            BachsResource::setDefaultClient($this->app->make(BachsFactory::class)->connection());
+        } catch (BachsInvalidArgumentException) {
+            // Bachs is not configured; leave the default client unset.
         }
     }
 
