@@ -77,11 +77,17 @@ return [
             | `times` is the number of retries (additional attempts beyond the
             | first). Mutating requests are only auto-retried when an idempotency
             | key is present (see docs/architecture.md).
+            |
+            | The wait between attempts grows exponentially: the first retry
+            | waits `sleep_ms`, doubling by `multiplier` up to `max_sleep_ms`.
+            | A 429 response's `Retry-After` header always takes precedence.
             */
 
             'retry' => [
                 'times' => (int) env('BACHS_RETRY_TIMES', 2),
                 'sleep_ms' => (int) env('BACHS_RETRY_SLEEP_MS', 100),
+                'multiplier' => (float) env('BACHS_RETRY_MULTIPLIER', 2.0),
+                'max_sleep_ms' => (int) env('BACHS_RETRY_MAX_SLEEP_MS', 5000),
             ],
         ],
 

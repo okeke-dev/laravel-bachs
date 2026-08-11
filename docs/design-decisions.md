@@ -126,6 +126,14 @@
 
 ---
 
+## D-16. Retries back off exponentially and honor `Retry-After`
+
+**Decision:** The transport retries with a delay that grows exponentially (`retry.sleep_ms` base, `retry.multiplier` growth, `retry.max_sleep_ms` cap). A 429 response carrying `Retry-After` (or `X-RateLimit-Reset`) is honored verbatim instead of the computed backoff. The delay is computed in a pure `Support\RetryDelay` helper so it is unit-testable without HTTP.
+
+**Why:** Bachs explicitly provides rate-limit timing headers; a fixed 100ms sleep is neither polite under sustained throttling nor fast enough for brief 5xx blips. Exponential growth bounds total retry time while keeping early retries snappy. Honoring `Retry-After` respects the API's own signal rather than guessing.
+
+---
+
 ## Open questions / to verify in M1
 
 - Exact current Laravel (11/12/13?) and PHP (8.2/8.3/8.4?) support policy snapshot for the CI matrix.

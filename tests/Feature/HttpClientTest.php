@@ -140,7 +140,7 @@ it('exposes retry-after on rate limit errors', function () {
     ]);
 
     try {
-        bachsTestClient()->get('payments');
+        bachsTestClient(['retry' => ['times' => 0, 'sleep_ms' => 0]])->get('payments');
         $this->fail('Expected a BachsRateLimitException.');
     } catch (BachsRateLimitException $exception) {
         expect($exception->retryAfter())->toBe(3);
@@ -228,4 +228,27 @@ it('exposes rate limit headers on successful responses', function () {
         'remaining' => '98',
         'reset' => '1700000000',
     ]);
+});
+
+it('waits for Retry-After before retrying a rate-limited request', function () {
+    $attempts = 0;
+
+    Http::fake(function ($request) use (&$attempts) {
+        $attempts++;
+
+        return $attempts === 1
+            ? Http::response([
+                'detail' => 'Too many requests',
+                'error_code' => 'TOO_MANY_REQUESTS',
+            ], 429, ['Retry-After' => 1])
+            : Http::response(['items' => []], 200);
+    });
+
+    $started = hrtime(true);
+    $response = bachsTestClient()->get('products');
+    $elapsedMs = (hrtime(true) - $started) / 1e6;
+
+    expect($attempts)->toBe(2)
+        ->and($elapsedMs)->toBeGreaterThanOrEqual(900)
+        ->and($response->status())->toBe(200);
 });

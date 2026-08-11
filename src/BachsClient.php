@@ -13,6 +13,7 @@ use OkekeDev\Bachs\Exceptions\BachsNetworkException;
 use OkekeDev\Bachs\Exceptions\Map;
 use OkekeDev\Bachs\Http\BachsRequest;
 use OkekeDev\Bachs\Http\BachsResponse;
+use OkekeDev\Bachs\Support\RetryDelay;
 use Throwable;
 
 class BachsClient
@@ -128,7 +129,7 @@ class BachsClient
             ->connectTimeout((float) $this->setting('connect_timeout', 10))
             ->retry(
                 max(1, (int) $this->setting('retry.times', 2) + 1),
-                (int) $this->setting('retry.sleep_ms', 100),
+                $this->retryDelay(),
                 $this->retryWhen($request),
             );
 
@@ -162,6 +163,37 @@ class BachsClient
     protected function setting(string $key, mixed $default = null): mixed
     {
         return data_get($this->config, $key, $default);
+    }
+
+    /**
+     * Build the retry delay in milliseconds as a function of the attempt and
+     * the failure. A 429 response that carries `Retry-After` (or
+     * `X-RateLimit-Reset`) is honored verbatim; otherwise the delay grows
+     * exponentially from the configured base.
+     *
+     * @return Closure(int, Throwable): int
+     */
+    protected function retryDelay(): Closure
+    {
+        return function (int $attempt, Throwable $exception): int {
+            return RetryDelay::milliseconds(
+                $attempt,
+                $exception instanceof RequestException ? $exception->response : null,
+                $this->retryConfiguration(),
+            );
+        };
+    }
+
+    /**
+     * The retry configuration for this connection.
+     *
+     * @return array<string, mixed>
+     */
+    protected function retryConfiguration(): array
+    {
+        $retry = $this->setting('retry', []);
+
+        return is_array($retry) ? $retry : [];
     }
 
     /**
