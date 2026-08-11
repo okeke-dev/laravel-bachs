@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shape, idempotency, retry policy, exception mapping, base URL resolution).
 - **Quality gates** — Laravel Pint (style) and PHPStan level 6 (types) wired
   into CI across PHP 8.2–8.4 and Laravel 12–13.
+- **Retry backoff** — retries now grow exponentially (`retry.multiplier`,
+  `retry.max_sleep_ms`) and honor `Retry-After` / `X-RateLimit-Reset` on 429
+  (`Support\RetryDelay`).
+- **Custom headers** — connection-level default headers (`connections.*.headers`)
+  plus per-request `headers` on the request options; `Authorization`, `Accept`,
+  `Content-Type`, and `Idempotency-Key` are reserved and cannot be overridden.
+- **Configurable API version** — the base URL version segment (`v1`) is
+  configurable via `connections.*.api_version` unless an explicit `base_url`
+  is set.
+- **Response accessors** — `BachsResponse::json('dot.path', $default)` and
+  `BachsResponse::toArray()` for normalized payload access.
 
 ### Fixed
 
