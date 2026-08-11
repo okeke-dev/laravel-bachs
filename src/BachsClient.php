@@ -101,11 +101,26 @@ class BachsClient
     }
 
     /**
+     * Send a multipart request with file attachments (e.g. media uploads).
+     *
+     * @param  array<int, array{name: string, contents: string, filename?: string}>  $attachments
+     * @param  array<mixed>  $body  Additional fields, sent as multipart parts.
+     */
+    public function upload(string $path, array $attachments, array $body = [], ?string $idempotencyKey = null): BachsResponse
+    {
+        return $this->request('POST', $path, [
+            'attachments' => $attachments,
+            'body' => $body,
+            'idempotency_key' => $idempotencyKey,
+        ]);
+    }
+
+    /**
      * Send a request to the Bachs API.
      *
      * Non-2xx responses throw a typed Bachs exception (see Exceptions\Map).
      *
-     * @param  array{query?: array<mixed>, body?: array<mixed>, headers?: array<string, string>, idempotency_key?: string|null}  $options
+     * @param  array{query?: array<mixed>, body?: array<mixed>, headers?: array<string, string>, attachments?: array<int, array{name: string, contents: string, filename?: string}>, idempotency_key?: string|null}  $options
      */
     public function request(string $method, string $path, array $options = []): BachsResponse
     {
@@ -119,6 +134,7 @@ class BachsClient
             query: $options['query'] ?? [],
             body: $options['body'] ?? [],
             headers: $options['headers'] ?? [],
+            attachments: $options['attachments'] ?? [],
             idempotencyKey: $options['idempotency_key'] ?? null,
         );
 
@@ -133,6 +149,10 @@ class BachsClient
                 $this->retryDelay(),
                 $this->retryWhen($request),
             );
+
+        if ($request->attachments !== []) {
+            $pending = $pending->asMultipart();
+        }
 
         try {
             $response = $pending->send($request->method, $this->url($request->path), $this->httpOptions($request));
@@ -208,7 +228,7 @@ class BachsClient
     /**
      * Build the transport options for a request.
      *
-     * @return array{query?: array<mixed>, json?: array<mixed>, headers?: array<string, string>}
+     * @return array{query?: array<mixed>, json?: array<mixed>, multipart?: array<int, array{name: string, contents: mixed, filename?: string}>, headers?: array<string, string>}
      */
     protected function httpOptions(BachsRequest $request): array
     {
@@ -218,7 +238,9 @@ class BachsClient
             $options['query'] = $request->query;
         }
 
-        if ($request->body !== []) {
+        if ($request->attachments !== []) {
+            $options['multipart'] = $this->multipart($request);
+        } elseif ($request->body !== []) {
             $options['json'] = $request->body;
         }
 
@@ -236,6 +258,35 @@ class BachsClient
         }
 
         return $options;
+    }
+
+    /**
+     * Build the multipart parts: file attachments followed by any additional
+     * body fields.
+     *
+     * @return array<int, array{name: string, contents: mixed, filename?: string}>
+     */
+    protected function multipart(BachsRequest $request): array
+    {
+        $parts = [];
+
+        foreach ($request->attachments as $attachment) {
+            $part = ['name' => $attachment['name'], 'contents' => $attachment['contents']];
+
+            if (isset($attachment['filename'])) {
+                $part['filename'] = $attachment['filename'];
+            }
+
+            $parts[] = $part;
+        }
+
+        foreach ($request->body as $name => $value) {
+            if (is_string($name)) {
+                $parts[] = ['name' => $name, 'contents' => (string) $value];
+            }
+        }
+
+        return $parts;
     }
 
     /**

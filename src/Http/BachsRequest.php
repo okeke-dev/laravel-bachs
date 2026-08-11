@@ -8,6 +8,7 @@ class BachsRequest
      * @param  array<mixed>  $query
      * @param  array<mixed>  $body
      * @param  array<string, string>  $headers
+     * @param  array<int, array{name: string, contents: string, filename?: string}>  $attachments
      */
     public function __construct(
         public readonly string $method,
@@ -15,6 +16,7 @@ class BachsRequest
         public readonly array $query = [],
         public readonly array $body = [],
         public readonly array $headers = [],
+        public readonly array $attachments = [],
         public readonly ?string $idempotencyKey = null,
     ) {}
 
