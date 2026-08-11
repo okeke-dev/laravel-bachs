@@ -74,6 +74,63 @@ it('encodes query parameters on requests', function () {
     });
 });
 
+it('sends per-request custom headers', function () {
+    Http::fake();
+
+    bachsTestClient()->request('GET', 'products', ['headers' => ['X-Request-Source' => 'tests']]);
+
+    Http::assertSent(fn ($request) => $request->hasHeader('X-Request-Source', 'tests'));
+});
+
+it('sends connection-level default headers on every request', function () {
+    Http::fake();
+
+    bachsTestClient(['headers' => ['X-Account' => 'org_123']])->get('products');
+
+    Http::assertSent(fn ($request) => $request->hasHeader('X-Account', 'org_123'));
+});
+
+it('lets per-request headers override connection defaults', function () {
+    Http::fake();
+
+    bachsTestClient(['headers' => ['X-Account' => 'org_default']])
+        ->request('GET', 'products', ['headers' => ['X-Account' => 'org_override']]);
+
+    Http::assertSent(fn ($request) => $request->hasHeader('X-Account', 'org_override'));
+});
+
+it('never lets custom headers replace authentication or content negotiation', function () {
+    Http::fake();
+
+    bachsTestClient()->request('GET', 'products', [
+        'headers' => [
+            'Authorization' => 'Bearer sk_live_hacked',
+            'Accept' => 'text/html',
+            'Content-Type' => 'text/plain',
+        ],
+    ]);
+
+    Http::assertSent(function ($request) {
+        return $request->hasHeader('Authorization', 'Bearer sk_sandbox_test_secret')
+            && $request->hasHeader('Accept', 'application/json');
+    });
+});
+
+it('keeps the idempotency key alongside custom headers', function () {
+    Http::fake();
+
+    bachsTestClient()->request('POST', 'customers', [
+        'body' => ['email' => 'a@b.com'],
+        'headers' => ['X-Trace' => 'abc'],
+        'idempotency_key' => 'idem_9',
+    ]);
+
+    Http::assertSent(function ($request) {
+        return $request->hasHeader('X-Trace', 'abc')
+            && $request->hasHeader('Idempotency-Key', 'idem_9');
+    });
+});
+
 it('throws when no secret key is configured', function () {
     $client = new BachsClient(secret: '', baseUrl: 'https://api.bachs.io/v1');
 

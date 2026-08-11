@@ -105,7 +105,7 @@ class BachsClient
      *
      * Non-2xx responses throw a typed Bachs exception (see Exceptions\Map).
      *
-     * @param  array{query?: array<mixed>, body?: array<mixed>, idempotency_key?: string|null}  $options
+     * @param  array{query?: array<mixed>, body?: array<mixed>, headers?: array<string, string>, idempotency_key?: string|null}  $options
      */
     public function request(string $method, string $path, array $options = []): BachsResponse
     {
@@ -118,6 +118,7 @@ class BachsClient
             path: $path,
             query: $options['query'] ?? [],
             body: $options['body'] ?? [],
+            headers: $options['headers'] ?? [],
             idempotencyKey: $options['idempotency_key'] ?? null,
         );
 
@@ -221,11 +222,58 @@ class BachsClient
             $options['json'] = $request->body;
         }
 
+        $headers = array_merge(
+            $this->sanitizeHeaders($this->defaultHeaders()),
+            $this->sanitizeHeaders($request->headers),
+        );
+
         if ($request->idempotencyKey !== null) {
-            $options['headers'] = ['Idempotency-Key' => $request->idempotencyKey];
+            $headers['Idempotency-Key'] = $request->idempotencyKey;
+        }
+
+        if ($headers !== []) {
+            $options['headers'] = $headers;
         }
 
         return $options;
+    }
+
+    /**
+     * Connection-level default headers, applied to every request.
+     *
+     * @return array<mixed>
+     */
+    protected function defaultHeaders(): array
+    {
+        $headers = $this->setting('headers', []);
+
+        return is_array($headers) ? $headers : [];
+    }
+
+    /**
+     * Drop reserved transport headers so callers cannot override
+     * authentication, content negotiation, or the idempotency key.
+     *
+     * @param  array<mixed>  $headers
+     * @return array<string, string>
+     */
+    protected function sanitizeHeaders(array $headers): array
+    {
+        $sanitized = [];
+
+        foreach ($headers as $name => $value) {
+            if (! is_string($name)) {
+                continue;
+            }
+
+            if (in_array(strtolower($name), ['authorization', 'accept', 'content-type', 'idempotency-key'], true)) {
+                continue;
+            }
+
+            $sanitized[$name] = (string) $value;
+        }
+
+        return $sanitized;
     }
 
     /**

@@ -61,6 +61,17 @@ return [
             'currency' => env('BACHS_CURRENCY', 'USD'),
 
             /*
+            | Additional headers sent with every request on this connection,
+            | e.g. a per-account identifier. Transport-reserved headers
+            | (Authorization, Accept, Content-Type, Idempotency-Key) cannot
+            | be overridden here.
+            */
+
+            'headers' => [
+                // 'X-Account' => env('BACHS_ACCOUNT_ID'),
+            ],
+
+            /*
             | HTTP request timeout, in seconds.
             */
 

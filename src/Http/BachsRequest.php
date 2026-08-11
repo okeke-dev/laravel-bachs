@@ -7,12 +7,14 @@ class BachsRequest
     /**
      * @param  array<mixed>  $query
      * @param  array<mixed>  $body
+     * @param  array<string, string>  $headers
      */
     public function __construct(
         public readonly string $method,
         public readonly string $path,
         public readonly array $query = [],
         public readonly array $body = [],
+        public readonly array $headers = [],
         public readonly ?string $idempotencyKey = null,
     ) {}
 

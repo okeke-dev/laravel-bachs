@@ -134,6 +134,14 @@
 
 ---
 
+## D-17. Custom headers cannot override transport-reserved headers
+
+**Decision:** Connections may define default headers (`connections.*.headers`) applied to every request, and each request may add its own `headers` option. `Authorization`, `Accept`, `Content-Type`, and `Idempotency-Key` are reserved: caller-supplied values for these names are silently dropped so authentication and content negotiation cannot be tampered with.
+
+**Why:** A per-connection `X-Account` or trace header is a common multi-account need, but letting callers rewrite the bearer token (or a future connection's default `Authorization`) would be a security hole. The transport owns identity; callers only decorate.
+
+---
+
 ## Open questions / to verify in M1
 
 - Exact current Laravel (11/12/13?) and PHP (8.2/8.3/8.4?) support policy snapshot for the CI matrix.
