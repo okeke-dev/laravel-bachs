@@ -55,6 +55,13 @@ return [
             'base_url' => env('BACHS_BASE_URL'),
 
             /*
+            | API version segment appended to the sandbox/live host, e.g. `v1`.
+            | Ignored when an explicit `base_url` is set.
+            */
+
+            'api_version' => env('BACHS_API_VERSION', 'v1'),
+
+            /*
             | Default currency used when a request does not specify one.
             */
 

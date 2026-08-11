@@ -39,3 +39,29 @@ it('strips a trailing slash from an explicit base url', function () {
         'base_url' => 'https://bachs.example.test/v1/',
     ]))->toBe('https://bachs.example.test/v1');
 });
+
+it('uses the configured api version segment', function () {
+    expect(BaseUrl::resolve(['env' => 'sandbox', 'api_version' => 'v2']))
+        ->toBe('https://sandbox-api.bachs.io/v2');
+
+    expect(BaseUrl::resolve(['env' => 'live', 'api_version' => 'v2']))
+        ->toBe('https://api.bachs.io/v2');
+});
+
+it('defaults to v1 when no api version is configured', function () {
+    expect(BaseUrl::resolve(['env' => 'sandbox', 'secret' => 'sk_sandbox_123']))
+        ->toBe(BaseUrl::SANDBOX);
+});
+
+it('applies the api version to key-prefixed environments too', function () {
+    expect(BaseUrl::resolve(['secret' => 'sk_live_123', 'api_version' => 'v2']))
+        ->toBe('https://api.bachs.io/v2');
+});
+
+it('keeps an explicit base url immune to the api version setting', function () {
+    expect(BaseUrl::resolve([
+        'env' => 'live',
+        'base_url' => 'https://bachs.example.test/v1',
+        'api_version' => 'v9',
+    ]))->toBe('https://bachs.example.test/v1');
+});

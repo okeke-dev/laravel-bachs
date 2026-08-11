@@ -142,6 +142,14 @@
 
 ---
 
+## D-18. API versioning lives in the base URL path, not a header
+
+**Decision:** The `/v1` segment is configurable via `connections.*.api_version` (default `v1`) and is appended to the sandbox/live host unless an explicit `base_url` is set. No version request header is sent.
+
+**Why:** Bachs versions its API in the URL path (`/api.bachs.io/v1`), and research found no documented version header. Inventing `X-Bachs-Api-Version` would violate the spec; making the segment configurable future-proofs against a v2 without breaking the default.
+
+---
+
 ## Open questions / to verify in M1
 
 - Exact current Laravel (11/12/13?) and PHP (8.2/8.3/8.4?) support policy snapshot for the CI matrix.
