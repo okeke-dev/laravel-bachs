@@ -150,7 +150,7 @@
 
 ## D-19. Resources are static entry points on the default connection
 
-**Decision:** Resource classes expose static methods — `Products::create(...)`, `Products::list()` — that run through the default connection's client, seeded into `BachsResource::$defaultClient` by the service provider at boot. Resources return raw payloads (`array`) and `PaginatedCollection` for lists; DTO returns arrive in milestone 4. The fluent facade surface (`Bachs::products()->create(...)`, per-connection resources) is deferred to milestone 5.
+**Decision:** Resource classes expose static methods — `Products::create(...)`, `Products::list()` — that run through the default connection's client, seeded into `BachsResource::$defaultClient` by the service provider at boot. Resources return typed DTOs (and `PaginatedCollection` of DTOs for lists); the exception `Map` converts failed responses into typed exceptions. The fluent facade surface (`Bachs::products()->create(...)`, per-connection resources) is deferred to milestone 5.
 
 **Why:** Milestone order puts the resource layer (M3/M4) before the container milestone (M5), so the M3 surface must work without a facade. `api-coverage.md` documents the `Products::create()` form. PHP forbids a same-named static and instance method in one class, so the static form and a future fluent form cannot coexist on one class. Per-connection access in M5 will be layered on top (e.g. the manager returning a resource bound to a resolved connection) without changing the static surface.
 

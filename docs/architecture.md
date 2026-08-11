@@ -131,23 +131,23 @@ Deviation note vs. the prompt's suggested tree: resources live under `Resources/
 
 ## 4. Resource layer
 
-- One class per resource (`Products`, `Customers`, `CheckoutSessions`, ...). Methods accept scalar/id params + input arrays and return a single payload (`array`) or a `PaginatedCollection` (list). DTO returns arrive in milestone 4.
+- One class per resource (`Products`, `Customers`, `CheckoutSessions`, ...). Methods accept scalar/id params + input arrays and return typed DTOs, or a `PaginatedCollection` of DTOs for lists.
 - Resources are **static entry points on the default connection** (see D-19): `Products::create([...])`, `Products::list()`, ... run through the default client, which `BachsServiceProvider` seeds at boot via `BachsResource::setDefaultClient()`.
-- `PaginatedCollection` wraps `items` + pagination cursor metadata and offers `hasMore()`, `nextCursor()`, `prevCursor()`, `limit()`, `offset()`, `returned()`, `total()`, and `map()` (which preserves the metadata).
+- `PaginatedCollection` wraps `items` + pagination cursor metadata and offers `hasMore()`, `nextCursor()`, `prevCursor()`, `limit()`, `offset()`, `returned()`, `total()`, and `map()`/`mapInto()` (which preserve the metadata).
 - Method naming mirrors Bachs terminology and Laravel idioms: `create()`, `get()`, `list()`, `update()`, `archive()`, `unarchive()`, `cancel()`, `createPortalSession()`.
 - Mutations accept an optional idempotency key: `Products::create([...], 'idem_...')` (see D-07).
 
-### Public surface (as shipped in M3)
+### Public surface (as shipped in M4)
 ```php
-Products::create(['name' => 'T-shirt', 'price' => ['amount' => '29.00', 'currency' => 'USD']]);
+Products::create(['name' => 'T-shirt', 'price' => ['amount' => '29.00', 'currency' => 'USD']]); // Product
 
-$products = Products::list(['limit' => 20]);   // PaginatedCollection
+$products = Products::list(['limit' => 20]);   // PaginatedCollection<int, Product>
 $products->count();                            // items on this page
 $products->hasMore();                          // pagination metadata
 $products->nextCursor();                       // cursor for the next page
 
-Products::get('prod_abc');
-Products::update('prod_abc', ['price' => ['amount' => '35.00', 'currency' => 'USD']]);
+Products::get('prod_abc');    // Product
+Products::update('prod_abc', ['price' => ['amount' => '35.00', 'currency' => 'USD']]); // Product
 Products::archive('prod_abc');
 Products::unarchive('prod_abc');
 ```

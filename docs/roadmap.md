@@ -14,7 +14,7 @@
 | 1 | Repository & package foundation | composer.json, PHPUnit/Pest + Testbench, Pint, PHPStan/Larastan, CI matrix, skeleton service provider, config, LICENSE, CONTRIBUTING, SECURITY, CHANGELOG | ✅ |
 | 2 | HTTP client & authentication | `BachsClient`, `BachsRequest`, auth header, base-URL selection, timeout/retry/backoff, rate-limit headers, safe logging, `x-request-id` | ✅ |
 | 3 | Core resource API | Products, product groups (pass-through), payment methods/rails, currencies, media/uploads, balances — Tier A passthrough + `PaginatedCollection` | ✅ |
-| 4 | DTOs, exceptions, value objects | All DTOs, `Money`, `Currency`, exception hierarchy + mapping, `PaginatedCollection` | ⬜ |
+| 4 | DTOs, exceptions, value objects | All DTOs, `Money`, `Currency`, exception hierarchy + mapping, `PaginatedCollection` | ✅ |
 | 5 | Laravel container | `BachsServiceProvider`, `BachsManager`, `Bachs` facade, helper, multi-connection, config publishing | ⬜ |
 | 6 | Customers | Customers resource + portal sessions, customer DTO, auto-sync, `$user->createAsBachsCustomer()` | ⬜ |
 | 7 | Billable | `Concerns\Billable`: customer mapping, subscription helpers, checkout/portal/refund shortcuts | ⬜ |
