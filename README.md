@@ -21,8 +21,9 @@ subscriptions, checkout sessions, payment methods, webhooks, and more — with a
 `Cashier`-style API that fits naturally into your application.
 
 > **Status:** this package is in early development (`0.x`). The API is not
-> stable yet and only the foundation (connections + configuration) exists so
-> far. See [`CHANGELOG.md`](CHANGELOG.md) and the open issues for progress.
+> stable yet. The foundation (connections, configuration, and the HTTP
+> transport with retries and typed errors) exists so far. See
+> [`CHANGELOG.md`](CHANGELOG.md) and the open issues for progress.
 
 ## Requirements
 
@@ -78,13 +79,15 @@ $client = Bachs::connection('partner'); // named connection
 ### Low-level transport
 
 `BachsClient` is the HTTP transport used by the resource layer. It handles
-authentication, JSON, timeouts, idempotency keys, safe retries, and typed
-exceptions:
+authentication, JSON, timeouts, idempotency keys, custom headers, retries with
+exponential backoff, and typed exceptions:
 
 ```php
 $response = $client->get('products', ['limit' => 20]);
 $response->status();      // 200
 $response->json();        // decoded payload
+$response->json('price.amount', '0.00'); // dot-notated access
+$response->toArray();     // decoded payload as an array
 $response->requestId();   // x-request-id, for support
 
 $client->post('customers', ['email' => 'a@b.com'], 'idem_123');
@@ -92,7 +95,15 @@ $client->post('customers', ['email' => 'a@b.com'], 'idem_123');
 
 - **Retries:** safe methods (`GET`/`HEAD`/`OPTIONS`) and requests carrying an
   `Idempotency-Key` retry on 429/5xx and network failures. Mutations without
-  an idempotency key are never blind-retried.
+  an idempotency key are never blind-retried. The delay grows exponentially
+  (`BACHS_RETRY_SLEEP_MS` base, `BACHS_RETRY_MULTIPLIER` growth,
+  `BACHS_RETRY_MAX_SLEEP_MS` cap) and a 429's `Retry-After` is honored.
+- **Headers:** connection-level defaults (`connections.*.headers`) plus
+  per-request headers via `request('GET', $path, ['headers' => [...]])`.
+  `Authorization`, `Accept`, `Content-Type`, and `Idempotency-Key` are
+  reserved and cannot be overridden.
+- **API version:** the `/v1` segment comes from `api_version`
+  (`BACHS_API_VERSION`), applied unless `base_url` is set explicitly.
 - **Exceptions:** non-2xx responses throw typed exceptions —
   `BachsAuthenticationException` (401), `BachsValidationException` (422),
   `BachsNotFoundException` (404), `BachsRateLimitException` (429),

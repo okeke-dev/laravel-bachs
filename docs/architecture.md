@@ -113,15 +113,19 @@ Deviation note vs. the prompt's suggested tree: resources live under `Resources/
 ## 3. HTTP transport (`BachsClient`)
 
 - Built on Laravel's HTTP client (`Illuminate\Support\Facades\Http`), which is Guzzle-based.
-- Centralizes: `Authorization: Bearer <key>`, base URL (env-aware sandbox/live), `Accept`/`Content-Type`, timeout, connect timeout, retries with backoff, `Idempotency-Key` header support, rate-limit header reading, and safe logging.
+- Centralizes: `Authorization: Bearer <key>`, base URL (env-aware sandbox/live), `Accept`/`Content-Type`, timeout, connect timeout, retries with exponential backoff, `Idempotency-Key`, custom headers, rate-limit header reading, and safe logging.
 - Captures `x-request-id` from every response for exceptions and logs.
-- Base URL auto-selection: config `bachs.env` (`sandbox`|`live`|`custom`); default base URL derived from key prefix (`sk_sandbox_` → sandbox, else live) with an explicit override.
-- Requests go through a `BachsRequest` value object (method, path, query, body, idempotency key) so middleware/retries act on one shape.
+- Base URL auto-selection: config `bachs.env` (`sandbox`|`live`); default base URL derived from key prefix (`sk_sandbox_` → sandbox, else live) with an explicit `base_url` override. The API version segment is configurable via `api_version` (default `v1`) — versioning lives in the URL path, never a header.
+- Requests go through a `BachsRequest` value object (method, path, query, body, headers, idempotency key) so middleware/retries act on one shape.
 
 ### Retries
-- Configurable: `retry.times`, `retry.sleep_ms`, `retry.when` (default: 429 + 5xx + network/timeout).
+- Configurable: `retry.times`, `retry.sleep_ms` (base), `retry.multiplier`, `retry.max_sleep_ms`, `retry.when` (default: 429 + 5xx + network/timeout).
+- Delay grows exponentially (`sleep_ms * multiplier^(attempt-1)`, capped at `max_sleep_ms`). A 429 response's `Retry-After` (or `X-RateLimit-Reset`) is honored verbatim — see `Support\RetryDelay`.
 - `POST`/`PATCH` requests only auto-retry when an `Idempotency-Key` is present OR the call opts in explicitly. Never blind-retry a mutation.
-- Respects `Retry-After` and `X-RateLimit-Reset` on 429.
+
+### Headers
+- Connections may set default headers (`connections.*.headers`) applied to every request; per-request `headers` (via the request `options`) merge on top.
+- `Authorization`, `Accept`, `Content-Type`, and `Idempotency-Key` are reserved — caller-supplied values for them are dropped so auth and content negotiation can't be overridden (see D-17).
 
 ---
 
@@ -177,7 +181,7 @@ Mapping table lives in `Exceptions/Map.php` (status + `error_code` → exception
 
 - `BachsServiceProvider`: merges config, binds `BachsManager` singleton, registers facade alias, loads routes, publishes migrations/config/views, registers Blade components and console commands.
 - `Bachs` facade → `BachsManager`. `app('bachs')` and `bachs()` helper.
-- Config (`config/bachs.php`) covers: `api_key`, `secret`, `env`, `base_url`, `webhook.secret`, `webhook.path`, `webhook.queue`, `webhook.middleware`, `timeout`, `connect_timeout`, `retry`, `logging.channel`, `database` (sync toggle + table names), `default_currency`, `http.middleware`.
+- Config (`config/bachs.php`) covers: `api_key`, `secret`, `env`, `base_url`, `api_version`, `headers`, `webhook.secret`, `webhook.path`, `webhook.queue`, `webhook.middleware`, `timeout`, `connect_timeout`, `retry` (`times`/`sleep_ms`/`multiplier`/`max_sleep_ms`), `logging.channel`, `database` (sync toggle + table names), `default_currency`, `http.middleware`.
 
 ---
 
