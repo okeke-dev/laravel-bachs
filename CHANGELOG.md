@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is set.
 - **Response accessors** — `BachsResponse::json('dot.path', $default)` and
   `BachsResponse::toArray()` for normalized payload access.
+- **Resource layer groundwork** — `BachsResource` base that seeds the default
+  connection's client for static resource calls, plus `PaginatedCollection`, a
+  Laravel collection carrying Bachs pagination metadata (`hasMore()`,
+  `nextCursor()`, `prevCursor()`, `limit()`, `offset()`, `returned()`,
+  `total()`, and metadata-preserving `map()`).
+- **Products resource** — `Products::create()`, `list()`, `get()`, `update()`,
+  `archive()`, and `unarchive()` (Tier A passthrough; DTO returns arrive in
+  milestone 4). Mutations accept an optional idempotency key.
 
 ### Fixed
 

@@ -131,20 +131,28 @@ Deviation note vs. the prompt's suggested tree: resources live under `Resources/
 
 ## 4. Resource layer
 
-- One class per resource, constructed with the client. Every resource method accepts scalar/id params + typed input where useful and returns a DTO (single) or a `PaginatedCollection` (list).
-- `PaginatedCollection` wraps `items` + pagination cursor metadata and offers `next()`, `hasMore()`, `total()`, etc.
-- Method naming mirrors Bachs terminology and Laravel idioms: `create()`, `get()`, `list()`/`paginate()`, `update()`, `archive()`, `cancel()`, `createPortalSession()`.
+- One class per resource (`Products`, `Customers`, `CheckoutSessions`, ...). Methods accept scalar/id params + input arrays and return a single payload (`array`) or a `PaginatedCollection` (list). DTO returns arrive in milestone 4.
+- Resources are **static entry points on the default connection** (see D-19): `Products::create([...])`, `Products::list()`, ... run through the default client, which `BachsServiceProvider` seeds at boot via `BachsResource::setDefaultClient()`.
+- `PaginatedCollection` wraps `items` + pagination cursor metadata and offers `hasMore()`, `nextCursor()`, `prevCursor()`, `limit()`, `offset()`, `returned()`, `total()`, and `map()` (which preserves the metadata).
+- Method naming mirrors Bachs terminology and Laravel idioms: `create()`, `get()`, `list()`, `update()`, `archive()`, `unarchive()`, `cancel()`, `createPortalSession()`.
+- Mutations accept an optional idempotency key: `Products::create([...], 'idem_...')` (see D-07).
 
-### Fluent API (public)
+### Public surface (as shipped in M3)
 ```php
-Bachs::customers()->create([...]);            // DTO
-Bachs::customers()->get('cust_abc');
-Bachs::products()->get('prod_abc');
-Bachs::payments()->list(['limit' => 50]);
-Bachs::subscriptions()->cancel('sub_abc');
-Bachs::checkoutSessions()->withIdempotencyKey($key)->create([...]);
+Products::create(['name' => 'T-shirt', 'price' => ['amount' => '29.00', 'currency' => 'USD']]);
+
+$products = Products::list(['limit' => 20]);   // PaginatedCollection
+$products->count();                            // items on this page
+$products->hasMore();                          // pagination metadata
+$products->nextCursor();                       // cursor for the next page
+
+Products::get('prod_abc');
+Products::update('prod_abc', ['price' => ['amount' => '35.00', 'currency' => 'USD']]);
+Products::archive('prod_abc');
+Products::unarchive('prod_abc');
 ```
-A `BachsManager` resolves the default connection; `Bachs::connection('secondary')->...` allows multiple keys.
+
+Per-connection access (a `Bachs::products()->...` facade surface) is deferred to the container milestone (M5) — see D-19.
 
 ---
 
