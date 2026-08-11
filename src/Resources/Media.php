@@ -2,6 +2,7 @@
 
 namespace OkekeDev\Bachs\Resources;
 
+use OkekeDev\Bachs\Dto\Upload;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 
 /**
@@ -15,9 +16,8 @@ class Media extends BachsResource
      *
      * @param  string  $file  A readable local file path.
      * @param  array<mixed>  $params
-     * @return array<mixed>
      */
-    public static function upload(string $file, array $params = [], ?string $idempotencyKey = null): array
+    public static function upload(string $file, array $params = [], ?string $idempotencyKey = null): Upload
     {
         if (! is_file($file) || ! is_readable($file)) {
             throw new BachsInvalidArgumentException(sprintf('The file [%s] does not exist or is not readable.', $file));
@@ -29,32 +29,30 @@ class Media extends BachsResource
             throw new BachsInvalidArgumentException(sprintf('The file [%s] could not be read.', $file));
         }
 
-        return static::defaultClient()->upload('utilities/uploads', [
+        $payload = static::defaultClient()->upload('utilities/uploads', [
             [
                 'name' => 'file',
                 'contents' => $contents,
                 'filename' => basename($file),
             ],
         ], $params, $idempotencyKey)->toArray();
+
+        return Upload::from($payload);
     }
 
     /**
      * Fetch an uploaded file's details.
-     *
-     * @return array<mixed>
      */
-    public static function get(string $id): array
+    public static function get(string $id): Upload
     {
-        return static::defaultClient()->get("utilities/uploads/{$id}")->toArray();
+        return Upload::from(static::defaultClient()->get("utilities/uploads/{$id}")->toArray());
     }
 
     /**
      * Delete an uploaded file.
-     *
-     * @return array<mixed>
      */
-    public static function delete(string $id, ?string $idempotencyKey = null): array
+    public static function delete(string $id, ?string $idempotencyKey = null): void
     {
-        return static::defaultClient()->delete("utilities/uploads/{$id}", [], $idempotencyKey)->toArray();
+        static::defaultClient()->delete("utilities/uploads/{$id}", [], $idempotencyKey);
     }
 }

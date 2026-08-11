@@ -1,13 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use OkekeDev\Bachs\Dto\Upload;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 use OkekeDev\Bachs\Resources\Media;
 
 it('uploads a file as multipart form data', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/utilities/uploads' => Http::response([
-            'id' => 'upl_1',
+            'upload_id' => 'upl_1',
+            'file_name' => 'upload-sample.txt',
+            'mime_type' => 'text/plain',
             'url' => 'https://cdn.bachs.io/uploads/upl_1',
         ], 201),
     ]);
@@ -38,7 +41,9 @@ it('uploads a file as multipart form data', function () {
             && $hasPurpose;
     });
 
-    expect($upload['id'])->toBe('upl_1');
+    expect($upload)->toBeInstanceOf(Upload::class)
+        ->and($upload->id())->toBe('upl_1')
+        ->and($upload->fileName())->toBe('upload-sample.txt');
 });
 
 it('sends the idempotency key on uploads', function () {
@@ -51,13 +56,30 @@ it('sends the idempotency key on uploads', function () {
 
 it('fetches and deletes an uploaded file', function () {
     Http::fake([
-        'sandbox-api.bachs.io/v1/utilities/uploads/upl_1' => Http::sequence()
-            ->push(['id' => 'upl_1', 'url' => 'https://cdn.bachs.io/uploads/upl_1'], 200)
-            ->push(['id' => 'upl_1', 'deleted' => true], 200),
+        'sandbox-api.bachs.io/v1/utilities/uploads/upl_1' => Http::response([
+            'upload_id' => 'upl_1',
+            'file_name' => 'upload-sample.txt',
+            'mime_type' => 'text/plain',
+            'file_size_bytes' => 17,
+            'url' => 'https://cdn.bachs.io/uploads/upl_1',
+            'created_at' => '2026-07-13T14:00:00.000Z',
+        ], 200),
     ]);
 
-    expect(Media::get('upl_1')['id'])->toBe('upl_1');
-    expect(Media::delete('upl_1')['deleted'])->toBeTrue();
+    $upload = Media::get('upl_1');
+
+    expect($upload)->toBeInstanceOf(Upload::class)
+        ->and($upload->id())->toBe('upl_1')
+        ->and($upload->fileSizeBytes())->toBe(17);
+
+    Http::fake([
+        'sandbox-api.bachs.io/v1/utilities/uploads/upl_1' => Http::response(['upload_id' => 'upl_1', 'deleted' => true], 200),
+    ]);
+
+    Media::delete('upl_1');
+
+    Http::assertSent(fn ($request) => $request->method() === 'DELETE'
+        && $request->url() === 'https://sandbox-api.bachs.io/v1/utilities/uploads/upl_1');
 });
 
 it('rejects a missing file', function () {

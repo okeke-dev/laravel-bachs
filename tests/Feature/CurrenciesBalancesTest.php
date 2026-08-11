@@ -1,15 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use OkekeDev\Bachs\Dto\SupportedCurrencies;
 use OkekeDev\Bachs\Resources\Balances;
 use OkekeDev\Bachs\Resources\Currencies;
 
-it('lists supported currencies', function () {
+it('lists supported currencies grouped by type', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/currencies/supported' => Http::response([
-            'USD',
-            'NGN',
-            'KES',
+            'fiat' => ['USD', 'NGN', 'GHS', 'KES'],
+            'crypto' => ['USDT_TRC20', 'BTC'],
         ]),
     ]);
 
@@ -18,26 +18,38 @@ it('lists supported currencies', function () {
     Http::assertSent(fn ($request) => $request->method() === 'GET'
         && $request->url() === 'https://sandbox-api.bachs.io/v1/currencies/supported');
 
-    expect($currencies)->toBe(['USD', 'NGN', 'KES']);
+    expect($currencies)->toBeInstanceOf(SupportedCurrencies::class)
+        ->and($currencies->fiat())->toHaveCount(4)
+        ->and($currencies->crypto())->toHaveCount(2)
+        ->and($currencies->supports('NGN'))->toBeTrue();
 });
 
 it('lists payout-supported currencies', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/currencies/payout-supported' => Http::response([
-            'NGN',
-            'GHS',
+            'fiat' => ['NGN', 'GHS'],
+            'crypto' => [],
         ]),
     ]);
 
-    expect(Currencies::payoutSupported())->toBe(['NGN', 'GHS']);
+    $currencies = Currencies::payoutSupported();
+
+    expect($currencies)->toBeInstanceOf(SupportedCurrencies::class)
+        ->and($currencies->fiat())->toHaveCount(2)
+        ->and($currencies->crypto())->toBe([])
+        ->and($currencies->supports('GHS'))->toBeTrue()
+        ->and($currencies->supports('USD'))->toBeFalse();
 });
 
 it('fetches the account balances', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/accounts/balances' => Http::response([
-            'currency' => 'USD',
-            'available' => '1284.50',
-            'pending' => '75.00',
+            'account_id' => 'org_1',
+            'balances' => [
+                ['currency' => 'USD', 'available_balance' => '1284.50', 'pending_balance' => '75.00'],
+            ],
+            'total_balance_usd' => '1359.50',
+            'pending_settlements_by_day' => [],
         ]),
     ]);
 
@@ -46,6 +58,9 @@ it('fetches the account balances', function () {
     Http::assertSent(fn ($request) => $request->method() === 'GET'
         && $request->url() === 'https://sandbox-api.bachs.io/v1/accounts/balances');
 
-    expect($balance['currency'])->toBe('USD')
-        ->and($balance['available'])->toBe('1284.50');
+    expect($balance->accountId())->toBe('org_1')
+        ->and($balance->balances())->toHaveCount(1)
+        ->and($balance->balances()[0]->currency()->code())->toBe('USD')
+        ->and($balance->balances()[0]->availableBalance()->amount())->toBe('1284.50')
+        ->and($balance->totalBalanceUsd()->amount())->toBe('1359.50');
 });

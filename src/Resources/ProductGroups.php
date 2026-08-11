@@ -3,6 +3,7 @@
 namespace OkekeDev\Bachs\Resources;
 
 use OkekeDev\Bachs\Collections\PaginatedCollection;
+use OkekeDev\Bachs\Dto\ProductGroup;
 
 /**
  * The Bachs product groups resource.
@@ -13,11 +14,10 @@ class ProductGroups extends BachsResource
      * Create a product group.
      *
      * @param  array<mixed>  $params
-     * @return array<mixed>
      */
-    public static function create(array $params = [], ?string $idempotencyKey = null): array
+    public static function create(array $params = [], ?string $idempotencyKey = null): ProductGroup
     {
-        return static::defaultClient()->post('product-groups', $params, $idempotencyKey)->toArray();
+        return ProductGroup::from(static::defaultClient()->post('product-groups', $params, $idempotencyKey)->toArray());
     }
 
     /**
@@ -27,37 +27,33 @@ class ProductGroups extends BachsResource
      */
     public static function list(array $params = []): PaginatedCollection
     {
-        return PaginatedCollection::fromPayload(static::defaultClient()->get('product-groups', $params)->toArray());
+        return PaginatedCollection::fromPayload(static::defaultClient()->get('product-groups', $params)->toArray())
+            ->mapInto(ProductGroup::class);
     }
 
     /**
      * Fetch a single product group.
-     *
-     * @return array<mixed>
      */
-    public static function get(string $id): array
+    public static function get(string $id): ProductGroup
     {
-        return static::defaultClient()->get("product-groups/{$id}")->toArray();
+        return ProductGroup::from(static::defaultClient()->get("product-groups/{$id}")->toArray());
     }
 
     /**
      * Update a product group. Only provided fields are changed.
      *
      * @param  array<mixed>  $params
-     * @return array<mixed>
      */
-    public static function update(string $id, array $params = [], ?string $idempotencyKey = null): array
+    public static function update(string $id, array $params = [], ?string $idempotencyKey = null): ProductGroup
     {
-        return static::defaultClient()->patch("product-groups/{$id}", $params, $idempotencyKey)->toArray();
+        return ProductGroup::from(static::defaultClient()->patch("product-groups/{$id}", $params, $idempotencyKey)->toArray());
     }
 
     /**
-     * Delete a product group.
-     *
-     * @return array<mixed>
+     * Delete a product group (`204 No Content` on success).
      */
-    public static function delete(string $id, ?string $idempotencyKey = null): array
+    public static function delete(string $id, ?string $idempotencyKey = null): void
     {
-        return static::defaultClient()->delete("product-groups/{$id}", [], $idempotencyKey)->toArray();
+        static::defaultClient()->delete("product-groups/{$id}", [], $idempotencyKey);
     }
 }

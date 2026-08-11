@@ -2,18 +2,18 @@
 
 namespace OkekeDev\Bachs\Resources;
 
+use OkekeDev\Bachs\Dto\Balance;
+
 /**
  * The Bachs balances resource.
  */
 class Balances extends BachsResource
 {
     /**
-     * Fetch the account balances across currencies.
-     *
-     * @return array<mixed>
+     * Fetch the organization's balances across currencies.
      */
-    public static function get(): array
+    public static function get(): Balance
     {
-        return static::defaultClient()->get('accounts/balances')->toArray();
+        return Balance::from(static::defaultClient()->get('accounts/balances')->toArray());
     }
 }

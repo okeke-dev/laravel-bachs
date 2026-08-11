@@ -3,6 +3,7 @@
 namespace OkekeDev\Bachs\Resources;
 
 use OkekeDev\Bachs\Collections\PaginatedCollection;
+use OkekeDev\Bachs\Dto\Product;
 
 /**
  * The Bachs products resource.
@@ -13,11 +14,10 @@ class Products extends BachsResource
      * Create a product.
      *
      * @param  array<mixed>  $params
-     * @return array<mixed>
      */
-    public static function create(array $params = [], ?string $idempotencyKey = null): array
+    public static function create(array $params = [], ?string $idempotencyKey = null): Product
     {
-        return static::defaultClient()->post('products', $params, $idempotencyKey)->toArray();
+        return Product::from(static::defaultClient()->post('products', $params, $idempotencyKey)->toArray());
     }
 
     /**
@@ -28,47 +28,41 @@ class Products extends BachsResource
      */
     public static function list(array $params = []): PaginatedCollection
     {
-        return PaginatedCollection::fromPayload(static::defaultClient()->get('products', $params)->toArray());
+        return PaginatedCollection::fromPayload(static::defaultClient()->get('products', $params)->toArray())
+            ->mapInto(Product::class);
     }
 
     /**
      * Fetch a single product.
-     *
-     * @return array<mixed>
      */
-    public static function get(string $id): array
+    public static function get(string $id): Product
     {
-        return static::defaultClient()->get("products/{$id}")->toArray();
+        return Product::from(static::defaultClient()->get("products/{$id}")->toArray());
     }
 
     /**
      * Update a product. Only provided fields are changed.
      *
      * @param  array<mixed>  $params
-     * @return array<mixed>
      */
-    public static function update(string $id, array $params = [], ?string $idempotencyKey = null): array
+    public static function update(string $id, array $params = [], ?string $idempotencyKey = null): Product
     {
-        return static::defaultClient()->patch("products/{$id}", $params, $idempotencyKey)->toArray();
+        return Product::from(static::defaultClient()->patch("products/{$id}", $params, $idempotencyKey)->toArray());
     }
 
     /**
      * Archive a product, removing it from new checkouts.
-     *
-     * @return array<mixed>
      */
-    public static function archive(string $id, ?string $idempotencyKey = null): array
+    public static function archive(string $id, ?string $idempotencyKey = null): Product
     {
-        return static::defaultClient()->post("products/{$id}/archive", [], $idempotencyKey)->toArray();
+        return Product::from(static::defaultClient()->post("products/{$id}/archive", [], $idempotencyKey)->toArray());
     }
 
     /**
      * Unarchive a product, making it available for checkout again.
-     *
-     * @return array<mixed>
      */
-    public static function unarchive(string $id, ?string $idempotencyKey = null): array
+    public static function unarchive(string $id, ?string $idempotencyKey = null): Product
     {
-        return static::defaultClient()->post("products/{$id}/unarchive", [], $idempotencyKey)->toArray();
+        return Product::from(static::defaultClient()->post("products/{$id}/unarchive", [], $idempotencyKey)->toArray());
     }
 }

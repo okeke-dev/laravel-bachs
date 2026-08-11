@@ -2,28 +2,26 @@
 
 namespace OkekeDev\Bachs\Resources;
 
+use OkekeDev\Bachs\Dto\SupportedCurrencies;
+
 /**
  * The Bachs currencies resource.
  */
 class Currencies extends BachsResource
 {
     /**
-     * List the currencies the account can use.
-     *
-     * @return array<mixed>
+     * List the currencies the account can use, grouped by type.
      */
-    public static function supported(): array
+    public static function supported(): SupportedCurrencies
     {
-        return static::defaultClient()->get('currencies/supported')->toArray();
+        return SupportedCurrencies::from(static::defaultClient()->get('currencies/supported')->toArray());
     }
 
     /**
-     * List the currencies that support payouts.
-     *
-     * @return array<mixed>
+     * List the currencies that support payouts/withdrawals, grouped by type.
      */
-    public static function payoutSupported(): array
+    public static function payoutSupported(): SupportedCurrencies
     {
-        return static::defaultClient()->get('currencies/payout-supported')->toArray();
+        return SupportedCurrencies::from(static::defaultClient()->get('currencies/payout-supported')->toArray());
     }
 }

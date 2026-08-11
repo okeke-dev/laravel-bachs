@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Http;
 use OkekeDev\Bachs\Collections\PaginatedCollection;
+use OkekeDev\Bachs\Dto\Product;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 use OkekeDev\Bachs\Exceptions\BachsNotFoundException;
 use OkekeDev\Bachs\Resources\BachsResource;
@@ -21,7 +22,13 @@ it('seeds the static default client from the configured connection', function ()
 
 it('creates a product via the static entry point', function () {
     Http::fake([
-        'sandbox-api.bachs.io/v1/products' => Http::response(['id' => 'prod_1', 'name' => 'T-shirt'], 201),
+        'sandbox-api.bachs.io/v1/products' => Http::response([
+            'id' => 'prod_1',
+            'organization_id' => 'org_1',
+            'name' => 'T-shirt',
+            'price' => ['currency' => 'USD', 'price_type' => 'fixed', 'amount' => '29.00'],
+            'status' => 'active',
+        ], 201),
     ]);
 
     $product = Products::create([
@@ -37,7 +44,11 @@ it('creates a product via the static entry point', function () {
             && $request['price']['currency'] === 'USD';
     });
 
-    expect($product)->toBe(['id' => 'prod_1', 'name' => 'T-shirt']);
+    expect($product)->toBeInstanceOf(Product::class)
+        ->and($product->id())->toBe('prod_1')
+        ->and($product->name())->toBe('T-shirt')
+        ->and($product->price()->amount()->amount())->toBe('29.00')
+        ->and($product->isActive())->toBeTrue();
 });
 
 it('sends the idempotency key on mutations', function () {
@@ -48,12 +59,12 @@ it('sends the idempotency key on mutations', function () {
     Http::assertSent(fn ($request) => $request->hasHeader('Idempotency-Key', 'idem_create_1'));
 });
 
-it('lists products as a paginated collection', function () {
+it('lists products as a paginated collection of DTOs', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/products*' => Http::response([
             'items' => [
-                ['id' => 'prod_1'],
-                ['id' => 'prod_2'],
+                ['id' => 'prod_1', 'name' => 'T-shirt', 'price' => ['currency' => 'USD', 'price_type' => 'fixed', 'amount' => '29.00']],
+                ['id' => 'prod_2', 'name' => 'Hoodie', 'price' => ['currency' => 'USD', 'price_type' => 'fixed', 'amount' => '59.00']],
             ],
             'pagination' => [
                 'has_more' => false,
@@ -78,28 +89,34 @@ it('lists products as a paginated collection', function () {
     expect($products)->toBeInstanceOf(PaginatedCollection::class)
         ->and($products->count())->toBe(2)
         ->and($products->total())->toBe(2)
-        ->and($products->hasMore())->toBeFalse();
+        ->and($products->hasMore())->toBeFalse()
+        ->and($products->first())->toBeInstanceOf(Product::class)
+        ->and($products->first()->name())->toBe('T-shirt')
+        ->and($products->last()->name())->toBe('Hoodie');
 });
 
 it('fetches, updates, archives, and unarchives a product', function () {
     Http::fake([
         'sandbox-api.bachs.io/v1/products/prod_1' => Http::sequence()
-            ->push(['id' => 'prod_1', 'name' => 'T-shirt'], 200)
-            ->push(['id' => 'prod_1', 'name' => 'T-shirt', 'price' => ['amount' => '35.00', 'currency' => 'USD']], 200),
-        'sandbox-api.bachs.io/v1/products/prod_1/archive' => Http::response(['id' => 'prod_1', 'archived' => true], 200),
-        'sandbox-api.bachs.io/v1/products/prod_1/unarchive' => Http::response(['id' => 'prod_1', 'archived' => false], 200),
+            ->push(['id' => 'prod_1', 'name' => 'T-shirt', 'status' => 'active', 'price' => ['currency' => 'USD', 'price_type' => 'fixed', 'amount' => '29.00']], 200)
+            ->push(['id' => 'prod_1', 'name' => 'T-shirt', 'status' => 'active', 'price' => ['currency' => 'USD', 'price_type' => 'fixed', 'amount' => '35.00']], 200),
+        'sandbox-api.bachs.io/v1/products/prod_1/archive' => Http::response(['id' => 'prod_1', 'status' => 'archived', 'archived_at' => '2026-07-13T14:00:00.000Z'], 200),
+        'sandbox-api.bachs.io/v1/products/prod_1/unarchive' => Http::response(['id' => 'prod_1', 'status' => 'active', 'archived_at' => null], 200),
     ]);
 
-    expect(Products::get('prod_1'))->toBe(['id' => 'prod_1', 'name' => 'T-shirt']);
+    $product = Products::get('prod_1');
+
+    expect($product)->toBeInstanceOf(Product::class)
+        ->and($product->name())->toBe('T-shirt');
 
     $updated = Products::update('prod_1', ['price' => ['amount' => '35.00', 'currency' => 'USD']]);
-    expect($updated['price']['amount'])->toBe('35.00');
+    expect($updated->price()->amount()->amount())->toBe('35.00');
 
     Http::assertSent(fn ($request) => $request->method() === 'PATCH'
         && $request->url() === 'https://sandbox-api.bachs.io/v1/products/prod_1');
 
-    expect(Products::archive('prod_1')['archived'])->toBeTrue();
-    expect(Products::unarchive('prod_1')['archived'])->toBeFalse();
+    expect(Products::archive('prod_1')->isArchived())->toBeTrue();
+    expect(Products::unarchive('prod_1')->isActive())->toBeTrue();
 });
 
 it('propagates typed exceptions from the API', function () {
