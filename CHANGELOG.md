@@ -46,6 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Products resource** — `Products::create()`, `list()`, `get()`, `update()`,
   `archive()`, and `unarchive()` (Tier A passthrough; DTO returns arrive in
   milestone 4). Mutations accept an optional idempotency key.
+- **Currencies resource** — `Currencies::supported()` and
+  `Currencies::payoutSupported()`.
+- **Balances resource** — `Balances::get()`.
+- **PaymentMethods resource** — `PaymentMethods::list()` (paginated) and
+  `PaymentMethods::rails()`.
+- **Media resource** — `Media::upload()`, `get()`, and `delete()`, backed by new
+  multipart upload support in the transport (`BachsClient::upload()` /
+  `BachsRequest` attachments); invalid files are rejected up front with
+  `BachsInvalidArgumentException`.
+- **ProductGroups resource** — `ProductGroups::create()`, `list()`, `get()`,
+  `update()`, and `delete()`. Mutations accept an optional idempotency key.
 
 ### Fixed
 
