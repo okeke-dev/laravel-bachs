@@ -17,7 +17,7 @@
 | 4 | DTOs, exceptions, value objects | All DTOs, `Money`, `Currency`, exception hierarchy + mapping, `PaginatedCollection` | ✅ |
 | 5 | Laravel container | `BachsServiceProvider`, `BachsManager`, `Bachs` facade, helper, multi-connection, config publishing | ✅ |
 | 6 | Customers | Customers resource + portal sessions, customer DTO, auto-sync, `$user->createAsBachsCustomer()` | ✅ |
-| 7 | Billable | `Concerns\Billable`: customer mapping, subscription helpers, checkout/portal/refund shortcuts | ⬜ |
+| 7 | Billable | `Concerns\Billable`: customer mapping, subscription helpers, checkout/portal/refund shortcuts | ✅ |
 | 8 | Checkout | CheckoutSessions resource, `$user->checkout()`, `CheckoutSession::redirect()`, overlay docs, Inertia/Livewire notes | ⬜ |
 | 9 | Subscriptions | Subscriptions resource, status helpers, swap/resume/cancel semantics, portal URL, `$user->subscribeTo()` | ⬜ |
 | 10 | Payments & refunds | Payments, refunds, payment methods; `refund()` helper; webhook confirmation guidance | ⬜ |

@@ -63,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Customers resource** — `Customers::create()`, `list()`, `get()`, `update()`,
   and `createPortalSession()`. Tier A passthrough with `Customer` and
   `PortalSession` DTOs. Mutations accept an optional idempotency key.
+- **Billable trait** — `Concerns\Billsable` for Eloquent models: customer
+  association (`createAsBachsCustomer()`, `bachsCustomer()`, `updateBachsCustomer()`),
+  billing portal (`billingPortalUrl()`), and stubs for checkout, subscriptions,
+  cancellation, and resumption (implemented in later milestones).
 
 ### Fixed
 
