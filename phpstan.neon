@@ -7,3 +7,5 @@ parameters:
         - src
     tmpDir: build/phpstan
     reportUnmatchedIgnoredErrors: true
+    ignoreErrors:
+        - '#Trait OkekeDev\\Bachs\\Concerns\\Billsable is used zero times and is not analysed.#'
