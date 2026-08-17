@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Laravel container** — `BachsServiceProvider`, `BachsManager`, `Bachs` facade,
+  `bachs()` global helper, multi-connection support, and config publishing
+  (`php artisan vendor:publish --tag=bachs-config`).
 - **Foundation** — package skeleton with a service provider, config file, and
   a connection manager (`Bachs::connection()`).
 - **Connections** — support for multiple Bachs API keys via named connections,
