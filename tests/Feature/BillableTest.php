@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Http;
 use OkekeDev\Bachs\Dto\CheckoutSession;
 use OkekeDev\Bachs\Dto\Customer;
+use OkekeDev\Bachs\Dto\Subscription;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 use OkekeDev\Bachs\Tests\Fixtures\BillableUser;
 
@@ -214,22 +215,118 @@ it('creates a checkout session without existing customer', function () {
     });
 });
 
-it('throws for unimplemented subscribeTo', function () {
-    $this->user->subscribeTo('prod_1');
-})->throws(BadMethodCallException::class, 'not yet implemented');
+it('subscribes to a product via checkout', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/checkout-sessions' => Http::response([
+            'checkout_id' => 'chk_sub',
+            'checkout_url' => 'https://checkout.bachs.io/chk_sub',
+            'status' => 'OPEN',
+            'created_at' => '2026-01-15T10:00:00Z',
+        ], 201),
+    ]);
 
-it('throws for unimplemented subscription', function () {
-    $this->user->subscription();
-})->throws(BadMethodCallException::class, 'not yet implemented');
+    $this->user->bachs_customer_id = 'cust_1';
 
-it('throws for unimplemented subscribed', function () {
-    $this->user->subscribed();
-})->throws(BadMethodCallException::class, 'not yet implemented');
+    $session = $this->user->subscribeTo('prod_recurring');
 
-it('throws for unimplemented cancel', function () {
+    expect($session)->toBeInstanceOf(CheckoutSession::class)
+        ->and($session->id())->toBe('chk_sub');
+
+    Http::assertSent(function ($request) {
+        return $request['customer']['customer_id'] === 'cust_1'
+            && $request['product_cart'][0]['product_id'] === 'prod_recurring';
+    });
+});
+
+it('returns null subscription when no subscription id stored', function () {
+    expect($this->user->subscription())->toBeNull();
+});
+
+it('fetches the active subscription', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/subscriptions/sub_1' => Http::response([
+            'id' => 'sub_1',
+            'customer' => ['customer_id' => 'cust_1'],
+            'status' => 'active',
+            'amount' => '29.00',
+            'currency' => 'USD',
+            'product' => ['id' => 'prod_1'],
+        ]),
+    ]);
+
+    $this->user->bachs_subscription_id = 'sub_1';
+
+    $subscription = $this->user->subscription();
+
+    expect($subscription)->toBeInstanceOf(Subscription::class)
+        ->and($subscription->id())->toBe('sub_1')
+        ->and($subscription->isActive())->toBeTrue();
+});
+
+it('returns true for subscribed when subscription is active', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/subscriptions/sub_1' => Http::response([
+            'id' => 'sub_1',
+            'status' => 'active',
+        ]),
+    ]);
+
+    $this->user->bachs_subscription_id = 'sub_1';
+
+    expect($this->user->subscribed())->toBeTrue();
+});
+
+it('returns false for subscribed when no subscription', function () {
+    expect($this->user->subscribed())->toBeFalse();
+});
+
+it('cancels the active subscription', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/subscriptions/sub_1' => Http::response([
+            'id' => 'sub_1',
+            'status' => 'canceled',
+            'canceled_at' => '2026-01-15T10:00:00Z',
+        ]),
+    ]);
+
+    $this->user->bachs_subscription_id = 'sub_1';
+
+    $subscription = $this->user->cancel();
+
+    expect($subscription)->toBeInstanceOf(Subscription::class)
+        ->and($subscription->isCanceled())->toBeTrue();
+
+    Http::assertSent(fn ($request) => $request->method() === 'DELETE'
+        && $request->url() === 'https://sandbox-api.bachs.io/v1/subscriptions/sub_1');
+});
+
+it('throws when canceling without subscription', function () {
     $this->user->cancel();
-})->throws(BadMethodCallException::class, 'not yet implemented');
+})->throws(BachsInvalidArgumentException::class, 'does not have an active subscription');
 
-it('throws for unimplemented resume', function () {
+it('resumes a canceled subscription', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/subscriptions/sub_1' => Http::response([
+            'id' => 'sub_1',
+            'status' => 'active',
+            'cancel_at_period_end' => false,
+        ]),
+    ]);
+
+    $this->user->bachs_subscription_id = 'sub_1';
+
+    $subscription = $this->user->resume();
+
+    expect($subscription)->toBeInstanceOf(Subscription::class)
+        ->and($subscription->cancelAtPeriodEnd())->toBeFalse();
+
+    Http::assertSent(function ($request) {
+        return $request->method() === 'PATCH'
+            && $request->url() === 'https://sandbox-api.bachs.io/v1/subscriptions/sub_1'
+            && $request['cancel_at_period_end'] === false;
+    });
+});
+
+it('throws when resuming without subscription', function () {
     $this->user->resume();
-})->throws(BadMethodCallException::class, 'not yet implemented');
+})->throws(BachsInvalidArgumentException::class, 'does not have a subscription to resume');

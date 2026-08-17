@@ -5,9 +5,11 @@ namespace OkekeDev\Bachs\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use OkekeDev\Bachs\Dto\CheckoutSession;
 use OkekeDev\Bachs\Dto\Customer;
+use OkekeDev\Bachs\Dto\Subscription;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 use OkekeDev\Bachs\Resources\CheckoutSessions;
 use OkekeDev\Bachs\Resources\Customers;
+use OkekeDev\Bachs\Resources\Subscriptions;
 
 /**
  * A concern that makes an Eloquent model billable via Bachs.
@@ -29,6 +31,14 @@ trait Billsable
     }
 
     /**
+     * Get the column name used to store the Bachs subscription ID.
+     */
+    public static function getBachsSubscriptionIdColumn(): string
+    {
+        return static::$bachsSubscriptionIdColumn ?? 'bachs_subscription_id';
+    }
+
+    /**
      * Get the Bachs customer ID stored on this model.
      */
     public function bachsCustomerId(): ?string
@@ -40,6 +50,16 @@ trait Billsable
         }
 
         return $this->{$column};
+    }
+
+    /**
+     * Get the Bachs subscription ID stored on this model.
+     */
+    public function bachsSubscriptionId(): ?string
+    {
+        $column = static::getBachsSubscriptionIdColumn();
+
+        return $this->getAttribute($column);
     }
 
     /**
@@ -164,27 +184,43 @@ trait Billsable
     }
 
     /**
-     * Subscribe this customer to a product.
+     * Subscribe this customer to a product by creating a checkout session.
+     *
+     * Subscriptions in Bachs are created by completing a checkout for a
+     * recurring product. This method creates a checkout session with the
+     * specified product.
      *
      * @param  array<string, mixed>  $params
      */
-    public function subscribeTo(string $productId, array $params = []): void
+    public function subscribeTo(string $productId, array $params = []): CheckoutSession
     {
-        // Implemented in milestone 9 (Subscriptions).
-        throw new \BadMethodCallException(
-            'Subscriptions are not yet implemented. They will be available in milestone 9.'
+        $params['product_cart'] = array_merge(
+            [['product_id' => $productId, 'quantity' => 1]],
+            $params['product_cart'] ?? []
         );
+
+        return $this->checkout($params);
     }
 
     /**
      * Get the active subscription for this customer.
+     *
+     * Returns null if no subscription ID is stored or if the subscription
+     * cannot be retrieved.
      */
-    public function subscription(): ?object
+    public function subscription(): ?Subscription
     {
-        // Implemented in milestone 9 (Subscriptions).
-        throw new \BadMethodCallException(
-            'Subscriptions are not yet implemented. They will be available in milestone 9.'
-        );
+        $subscriptionId = $this->bachsSubscriptionId();
+
+        if ($subscriptionId === null) {
+            return null;
+        }
+
+        try {
+            return Subscriptions::get($subscriptionId);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -192,31 +228,43 @@ trait Billsable
      */
     public function subscribed(): bool
     {
-        // Implemented in milestone 9 (Subscriptions).
-        throw new \BadMethodCallException(
-            'Subscriptions are not yet implemented. They will be available in milestone 9.'
-        );
+        $subscription = $this->subscription();
+
+        return $subscription !== null && ($subscription->isActive() || $subscription->isTrialing());
     }
 
     /**
      * Cancel the active subscription for this customer.
      */
-    public function cancel(): void
+    public function cancel(): ?Subscription
     {
-        // Implemented in milestone 9 (Subscriptions).
-        throw new \BadMethodCallException(
-            'Subscriptions are not yet implemented. They will be available in milestone 9.'
-        );
+        $subscriptionId = $this->bachsSubscriptionId();
+
+        if ($subscriptionId === null) {
+            throw new BachsInvalidArgumentException(
+                'This model does not have an active subscription to cancel.'
+            );
+        }
+
+        return Subscriptions::cancel($subscriptionId);
     }
 
     /**
      * Resume a canceled subscription for this customer.
+     *
+     * This updates the subscription to cancel at the end of the current
+     * period instead of immediately.
      */
-    public function resume(): void
+    public function resume(): ?Subscription
     {
-        // Implemented in milestone 9 (Subscriptions).
-        throw new \BadMethodCallException(
-            'Subscriptions are not yet implemented. They will be available in milestone 9.'
-        );
+        $subscriptionId = $this->bachsSubscriptionId();
+
+        if ($subscriptionId === null) {
+            throw new BachsInvalidArgumentException(
+                'This model does not have a subscription to resume.'
+            );
+        }
+
+        return Subscriptions::update($subscriptionId, ['cancel_at_period_end' => false]);
     }
 }
