@@ -60,6 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `BachsInvalidArgumentException`.
 - **ProductGroups resource** — `ProductGroups::create()`, `list()`, `get()`,
   `update()`, and `delete()`. Mutations accept an optional idempotency key.
+- **Customers resource** — `Customers::create()`, `list()`, `get()`, `update()`,
+  and `createPortalSession()`. Tier A passthrough with `Customer` and
+  `PortalSession` DTOs. Mutations accept an optional idempotency key.
 
 ### Fixed
 
