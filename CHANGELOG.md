@@ -65,8 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PortalSession` DTOs. Mutations accept an optional idempotency key.
 - **Billable trait** — `Concerns\Billsable` for Eloquent models: customer
   association (`createAsBachsCustomer()`, `bachsCustomer()`, `updateBachsCustomer()`),
-  billing portal (`billingPortalUrl()`), and stubs for checkout, subscriptions,
-  cancellation, and resumption (implemented in later milestones).
+  billing portal (`billingPortalUrl()`), checkout (`checkout()`), and stubs
+  for subscriptions, cancellation, and resumption (implemented in later milestones).
+- **Checkout** — `CheckoutSessions` resource with `create()` and `get()`,
+  `CheckoutSession` DTO with status helpers and `redirect()` method, and
+  `$user->checkout()` on the Billable trait.
 
 ### Fixed
 
