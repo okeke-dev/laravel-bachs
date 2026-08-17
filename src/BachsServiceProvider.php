@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 use OkekeDev\Bachs\Contracts\BachsFactory;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
+use OkekeDev\Bachs\Http\Controllers\WebhookController;
 use OkekeDev\Bachs\Resources\BachsResource;
 
 class BachsServiceProvider extends ServiceProvider
@@ -25,6 +26,8 @@ class BachsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerRoutes();
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/bachs.php' => $this->app->configPath('bachs.php'),
@@ -58,5 +61,18 @@ class BachsServiceProvider extends ServiceProvider
         });
 
         $this->app->alias(BachsFactory::class, 'bachs');
+    }
+
+    /**
+     * Register the webhook route.
+     */
+    protected function registerRoutes(): void
+    {
+        $path = config('bachs.webhook.path', 'bachs/webhook');
+        $middleware = config('bachs.webhook.middleware', []);
+
+        $this->app['router']->post($path, WebhookController::class)
+            ->middleware($middleware)
+            ->name('bachs.webhook');
     }
 }
