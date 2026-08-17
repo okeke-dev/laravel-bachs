@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use OkekeDev\Bachs\Dto\CheckoutSession;
 use OkekeDev\Bachs\Dto\Customer;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
 use OkekeDev\Bachs\Tests\Fixtures\BillableUser;
@@ -161,9 +162,57 @@ it('throws when creating portal session for model without customer', function ()
     $this->user->billingPortalUrl();
 })->throws(BachsInvalidArgumentException::class, 'does not have a Bachs customer');
 
-it('throws for unimplemented checkout', function () {
-    $this->user->checkout(['product_id' => 'prod_1']);
-})->throws(BadMethodCallException::class, 'not yet implemented');
+it('creates a checkout session with existing customer', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/checkout-sessions' => Http::response([
+            'checkout_id' => 'chk_1',
+            'checkout_url' => 'https://checkout.bachs.io/chk_1',
+            'status' => 'OPEN',
+            'created_at' => '2026-01-15T10:00:00Z',
+        ], 201),
+    ]);
+
+    $this->user->bachs_customer_id = 'cust_1';
+
+    $session = $this->user->checkout([
+        'product_cart' => [['product_id' => 'prod_1', 'quantity' => 1]],
+        'success_url' => 'https://example.com/success',
+    ]);
+
+    expect($session)->toBeInstanceOf(CheckoutSession::class)
+        ->and($session->id())->toBe('chk_1')
+        ->and($session->url())->toBe('https://checkout.bachs.io/chk_1');
+
+    Http::assertSent(function ($request) {
+        return $request->method() === 'POST'
+            && $request->url() === 'https://sandbox-api.bachs.io/v1/checkout-sessions'
+            && $request['customer']['customer_id'] === 'cust_1';
+    });
+});
+
+it('creates a checkout session without existing customer', function () {
+    Http::fake([
+        'sandbox-api.bachs.io/v1/checkout-sessions' => Http::response([
+            'checkout_id' => 'chk_2',
+            'checkout_url' => 'https://checkout.bachs.io/chk_2',
+            'status' => 'OPEN',
+            'created_at' => '2026-01-15T10:00:00Z',
+        ], 201),
+    ]);
+
+    $session = $this->user->checkout([
+        'product_cart' => [['product_id' => 'prod_1', 'quantity' => 1]],
+        'success_url' => 'https://example.com/success',
+    ]);
+
+    expect($session)->toBeInstanceOf(CheckoutSession::class)
+        ->and($session->id())->toBe('chk_2');
+
+    Http::assertSent(function ($request) {
+        return $request['customer']['email'] === 'jane@example.com'
+            && $request['customer']['name'] === 'Jane Doe';
+    });
+});
 
 it('throws for unimplemented subscribeTo', function () {
     $this->user->subscribeTo('prod_1');

@@ -3,8 +3,10 @@
 namespace OkekeDev\Bachs\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use OkekeDev\Bachs\Dto\CheckoutSession;
 use OkekeDev\Bachs\Dto\Customer;
 use OkekeDev\Bachs\Exceptions\BachsInvalidArgumentException;
+use OkekeDev\Bachs\Resources\CheckoutSessions;
 use OkekeDev\Bachs\Resources\Customers;
 
 /**
@@ -146,12 +148,19 @@ trait Billsable
      *
      * @param  array<string, mixed>  $params
      */
-    public function checkout(array $params = []): void
+    public function checkout(array $params = []): CheckoutSession
     {
-        // Implemented in milestone 8 (Checkout).
-        throw new \BadMethodCallException(
-            'Checkout is not yet implemented. It will be available in milestone 8.'
-        );
+        $customerId = $this->bachsCustomerId();
+
+        if ($customerId !== null) {
+            $params['customer'] = ['customer_id' => $customerId];
+        } else {
+            $params['customer'] = array_merge([
+                'email' => $this->getEmailForBachs(),
+            ], isset($params['customer']) ? [] : ['name' => $this->getNameForBachs()]);
+        }
+
+        return CheckoutSessions::create($params);
     }
 
     /**
