@@ -19,7 +19,7 @@
 | 6 | Customers | Customers resource + portal sessions, customer DTO, auto-sync, `$user->createAsBachsCustomer()` | ✅ |
 | 7 | Billable | `Concerns\Billable`: customer mapping, subscription helpers, checkout/portal/refund shortcuts | ✅ |
 | 8 | Checkout | CheckoutSessions resource, `$user->checkout()`, `CheckoutSession::redirect()`, overlay docs, Inertia/Livewire notes | ✅ |
-| 9 | Subscriptions | Subscriptions resource, status helpers, swap/resume/cancel semantics, portal URL, `$user->subscribeTo()` | ⬜ |
+| 9 | Subscriptions | Subscriptions resource, status helpers, swap/resume/cancel semantics, portal URL, `$user->subscribeTo()` | ✅ |
 | 10 | Payments & refunds | Payments, refunds, payment methods; `refund()` helper; webhook confirmation guidance | ⬜ |
 | 11 | Webhooks (delivery) | SignatureVerifier, WebhookProcessor, WebhookEvent, typed events, `WebhookController`, configurable route/middleware | ⬜ |
 | 12 | Webhook persistence/idempotency/queues | `bachs_webhook_events` store, `evt_` dedupe, queue + retry-safe processing, ack-before-work | ⬜ |
