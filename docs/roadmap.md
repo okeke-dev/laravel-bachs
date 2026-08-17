@@ -21,7 +21,7 @@
 | 8 | Checkout | CheckoutSessions resource, `$user->checkout()`, `CheckoutSession::redirect()`, overlay docs, Inertia/Livewire notes | ✅ |
 | 9 | Subscriptions | Subscriptions resource, status helpers, swap/resume/cancel semantics, portal URL, `$user->subscribeTo()` | ✅ |
 | 10 | Payments & refunds | Payments, refunds, payment methods; `refund()` helper; webhook confirmation guidance | ✅ |
-| 11 | Webhooks (delivery) | SignatureVerifier, WebhookProcessor, WebhookEvent, typed events, `WebhookController`, configurable route/middleware | ⬜ |
+| 11 | Webhooks (delivery) | SignatureVerifier, WebhookProcessor, WebhookEvent, typed events, `WebhookController`, configurable route/middleware | ✅ |
 | 12 | Webhook persistence/idempotency/queues | `bachs_webhook_events` store, `evt_` dedupe, queue + retry-safe processing, ack-before-work | ⬜ |
 | 13 | Local synchronized models | BachsCustomer/Product/Payment/Subscription models, migrations, webhook sync (opt-in) | ⬜ |
 | 14 | Blade integration | `x-bachs-checkout` components (hosted + overlay + subscribe variants), accessible, unstyled | ⬜ |

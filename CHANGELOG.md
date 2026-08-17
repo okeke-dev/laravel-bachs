@@ -82,6 +82,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Refunds** — `Refunds` resource with `create()`, `list()`, `get()`, and
   `getByCharge()`. `Refund` DTO with status helpers (`isProcessing()`,
   `isSuccess()`, `isFailed()`) and fee tracking.
+- **Webhooks (delivery)** — Production-grade webhook system:
+  - `Webhooks\SignatureVerifier` — HMAC-SHA256 signature verification with
+    constant-time comparison and replay protection via timestamp tolerance.
+  - `Webhooks\WebhookEvent` — Parsed event envelope DTO.
+  - `Webhooks\WebhookProcessor` — Event identification, persistence, and
+    duplicate detection with typed Laravel event dispatch.
+  - `Webhooks\ProcessWebhookJob` — Queue-safe job for async processing.
+  - `Http\Controllers\WebhookController` — Route handler with immediate
+    acknowledgment (200) before processing.
+  - 25 typed Laravel events for all Bachs webhook event types.
+  - Configurable route path, middleware, queue connection, and tolerance.
+  - Safe logging (never logs secrets or sensitive data).
 
 ### Fixed
 
