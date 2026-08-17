@@ -2,10 +2,12 @@
 
 use OkekeDev\Bachs\Dto\Balance;
 use OkekeDev\Bachs\Dto\BalanceBucket;
+use OkekeDev\Bachs\Dto\Customer;
 use OkekeDev\Bachs\Dto\MediaItem;
 use OkekeDev\Bachs\Dto\PaymentMethod;
 use OkekeDev\Bachs\Dto\PaymentRailLookup;
 use OkekeDev\Bachs\Dto\PaymentRailOption;
+use OkekeDev\Bachs\Dto\PortalSession;
 use OkekeDev\Bachs\Dto\Product;
 use OkekeDev\Bachs\Dto\ProductGroup;
 use OkekeDev\Bachs\Dto\SupportedCurrencies;
@@ -204,4 +206,70 @@ it('hydrates uploads using the upload_id field as the id', function () {
         ->and($upload->url())->toBe('https://cdn.bachs.io/uploads/upl_1/product-hero.png')
         ->and($upload->linkedResourceType())->toBe('product')
         ->and($upload->linkedResourceId())->toBe('prod_1');
+});
+
+it('hydrates a customer with typed accessors', function () {
+    $customer = Customer::from([
+        'customer_id' => 'cust_1',
+        'email' => 'jane@example.com',
+        'name' => 'Jane Doe',
+        'phone_number' => '+2348012345678',
+        'metadata' => ['user_id' => '42'],
+        'billing_address' => ['line1' => '123 Main St', 'city' => 'Lagos'],
+        'created_at' => '2026-01-15T10:00:00Z',
+        'updated_at' => '2026-01-15T10:00:00Z',
+    ]);
+
+    expect($customer->id())->toBe('cust_1')
+        ->and($customer->email())->toBe('jane@example.com')
+        ->and($customer->name())->toBe('Jane Doe')
+        ->and($customer->phoneNumber())->toBe('+2348012345678')
+        ->and($customer->metadata())->toBe(['user_id' => '42'])
+        ->and($customer->billingAddress())->toBe(['line1' => '123 Main St', 'city' => 'Lagos'])
+        ->and($customer->createdAt())->toBe('2026-01-15T10:00:00Z')
+        ->and($customer->updatedAt())->toBe('2026-01-15T10:00:00Z');
+});
+
+it('treats absent customer fields defensively', function () {
+    $customer = Customer::from([
+        'customer_id' => 'cust_2',
+        'email' => 'minimal@example.com',
+    ]);
+
+    expect($customer->id())->toBe('cust_2')
+        ->and($customer->email())->toBe('minimal@example.com')
+        ->and($customer->name())->toBeNull()
+        ->and($customer->phoneNumber())->toBeNull()
+        ->and($customer->metadata())->toBe([])
+        ->and($customer->billingAddress())->toBe([])
+        ->and($customer->createdAt())->toBeNull()
+        ->and($customer->updatedAt())->toBeNull();
+});
+
+it('hydrates a customer using the id field as fallback', function () {
+    $customer = Customer::from([
+        'id' => 'cust_3',
+        'email' => 'fallback@example.com',
+    ]);
+
+    expect($customer->id())->toBe('cust_3');
+});
+
+it('hydrates a portal session with typed accessors', function () {
+    $session = PortalSession::from([
+        'session_id' => 'ps_1',
+        'customer_id' => 'cust_1',
+        'url' => 'https://portal.bachs.io/session/ps_1',
+        'status' => 'active',
+        'expires_at' => '2026-01-15T11:00:00Z',
+        'created_at' => '2026-01-15T10:00:00Z',
+    ]);
+
+    expect($session->id())->toBe('ps_1')
+        ->and($session->customerId())->toBe('cust_1')
+        ->and($session->url())->toBe('https://portal.bachs.io/session/ps_1')
+        ->and($session->status())->toBe('active')
+        ->and($session->isActive())->toBeTrue()
+        ->and($session->expiresAt())->toBe('2026-01-15T11:00:00Z')
+        ->and($session->createdAt())->toBe('2026-01-15T10:00:00Z');
 });
