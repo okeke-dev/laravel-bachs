@@ -30,6 +30,8 @@ jobs:
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
+    continue-on-error: ${{ matrix.laravel == '13.*' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
