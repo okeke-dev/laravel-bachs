@@ -19,6 +19,7 @@ class BachsServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/bachs.php', 'bachs');
 
         $this->registerManager();
+        $this->registerModels();
     }
 
     /**
@@ -52,6 +53,23 @@ class BachsServiceProvider extends ServiceProvider
             BachsResource::setDefaultClient($this->app->make(BachsFactory::class)->connection());
         } catch (BachsInvalidArgumentException) {
             // Bachs is not configured; leave the default client unset.
+        }
+    }
+
+    /**
+     * Register the model classes as singletons for easy resolution.
+     */
+    protected function registerModels(): void
+    {
+        $models = [
+            'bachs.customer' => Models\BachsCustomer::class,
+            'bachs.product' => Models\BachsProduct::class,
+            'bachs.payment' => Models\BachsPayment::class,
+            'bachs.subscription' => Models\BachsSubscription::class,
+        ];
+
+        foreach ($models as $abstract => $concrete) {
+            $this->app->singleton($abstract, $concrete);
         }
     }
 

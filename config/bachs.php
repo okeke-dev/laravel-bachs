@@ -1,5 +1,10 @@
 <?php
 
+use OkekeDev\Bachs\Models\BachsCustomer;
+use OkekeDev\Bachs\Models\BachsPayment;
+use OkekeDev\Bachs\Models\BachsProduct;
+use OkekeDev\Bachs\Models\BachsSubscription;
+
 return [
 
     /*
@@ -196,6 +201,12 @@ return [
             'payments' => 'bachs_payments',
             'subscriptions' => 'bachs_subscriptions',
             'webhook_events' => 'bachs_webhook_events',
+        ],
+        'models' => [
+            'customer' => BachsCustomer::class,
+            'product' => BachsProduct::class,
+            'payment' => BachsPayment::class,
+            'subscription' => BachsSubscription::class,
         ],
     ],
 

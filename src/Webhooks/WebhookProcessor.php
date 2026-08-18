@@ -43,6 +43,10 @@ use OkekeDev\Bachs\Events\WebhookReceived;
  */
 class WebhookProcessor
 {
+    public function __construct(
+        protected ?WebhookSyncer $syncer = null,
+    ) {}
+
     /**
      * Process a verified webhook event.
      */
@@ -67,6 +71,7 @@ class WebhookProcessor
         // Persist the event if database sync is enabled
         if ($this->shouldPersist()) {
             $this->persistEvent($event);
+            $this->syncResource($event);
         }
 
         // Dispatch the typed Laravel event
@@ -192,6 +197,26 @@ class WebhookProcessor
     protected function shouldPersist(): bool
     {
         return Config::get('bachs.database.sync', false);
+    }
+
+    /**
+     * Sync the event data to local resource models.
+     */
+    protected function syncResource(WebhookEvent $event): void
+    {
+        if ($this->syncer === null) {
+            $this->syncer = new WebhookSyncer;
+        }
+
+        try {
+            $this->syncer->sync($event);
+        } catch (\Throwable $e) {
+            Log::error('Failed to sync webhook event to local models.', [
+                'event_id' => $event->id(),
+                'event_type' => $event->type(),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
