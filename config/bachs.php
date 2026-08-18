@@ -140,6 +140,13 @@ return [
         'queue' => env('BACHS_WEBHOOK_QUEUE'),
 
         /*
+        | Queue name for webhook processing jobs. When null, the default
+        | queue for the chosen connection is used.
+        */
+
+        'queue_name' => env('BACHS_WEBHOOK_QUEUE_NAME'),
+
+        /*
         | Maximum age (seconds) of a signed delivery before it is rejected
         | as stale / a replay.
         */

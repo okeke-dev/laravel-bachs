@@ -77,12 +77,17 @@ class WebhookController
 
         // Step 5: Process the event (may be queued)
         $queueConnection = Config::get('bachs.webhook.queue');
+        $queueName = Config::get('bachs.webhook.queue_name');
 
         if ($queueConnection !== null) {
             // Queue the processing for later
-            Bus::dispatch(
+            $job = Bus::dispatch(
                 new ProcessWebhookJob($event)
             )->onConnection($queueConnection);
+
+            if ($queueName !== null) {
+                $job->onQueue($queueName);
+            }
         } else {
             // Process synchronously
             $this->processor->process($event);

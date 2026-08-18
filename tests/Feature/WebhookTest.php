@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use OkekeDev\Bachs\Events\AccountUpdated;
@@ -32,6 +33,7 @@ use OkekeDev\Bachs\Events\TransferCreated;
 use OkekeDev\Bachs\Events\WebhookReceived;
 use OkekeDev\Bachs\Exceptions\BachsWebhookInvalidSignatureException;
 use OkekeDev\Bachs\Exceptions\BachsWebhookStaleTimestampException;
+use OkekeDev\Bachs\Webhooks\ProcessWebhookJob;
 use OkekeDev\Bachs\Webhooks\SignatureVerifier;
 use OkekeDev\Bachs\Webhooks\WebhookEvent;
 use OkekeDev\Bachs\Webhooks\WebhookProcessor;
@@ -226,7 +228,7 @@ it('detects duplicate events when persistence is enabled', function () {
         $table->string('organization_id');
         $table->string('account')->nullable();
         $table->text('data');
-        $table->string('created_at');
+        $table->string('event_created_at');
         $table->string('processed_at');
     });
 
@@ -302,4 +304,150 @@ it('maps event types to correct Laravel event classes', function () {
 
         Event::fake([]); // Reset
     }
+});
+
+it('creates the bachs_webhook_events table with correct schema', function () {
+    Schema::create('bachs_webhook_events', function ($table) {
+        $table->id();
+        $table->string('event_id')->unique();
+        $table->string('type');
+        $table->string('organization_id');
+        $table->string('account')->nullable();
+        $table->text('data');
+        $table->string('event_created_at');
+        $table->string('processed_at');
+        $table->timestamps();
+    });
+
+    expect(Schema::hasTable('bachs_webhook_events'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'event_id'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'type'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'organization_id'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'account'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'data'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'event_created_at'))->toBeTrue()
+        ->and(Schema::hasColumn('bachs_webhook_events', 'processed_at'))->toBeTrue();
+
+    Schema::dropIfExists('bachs_webhook_events');
+});
+
+it('persists webhook events to the database when sync is enabled', function () {
+    Config::set('bachs.database.sync', true);
+
+    Schema::create('bachs_webhook_events', function ($table) {
+        $table->id();
+        $table->string('event_id')->unique();
+        $table->string('type');
+        $table->string('organization_id');
+        $table->string('account')->nullable();
+        $table->text('data');
+        $table->string('event_created_at');
+        $table->string('processed_at');
+    });
+
+    $processor = new WebhookProcessor;
+    $event = WebhookEvent::fromPayload([
+        'id' => 'evt_persist_test',
+        'type' => 'collection.succeeded',
+        'created_at' => now()->toIso8601String(),
+        'organization_id' => 'org_1',
+        'data' => ['payment_id' => 'pay_1'],
+    ]);
+
+    $processor->process($event);
+
+    $stored = DB::table('bachs_webhook_events')
+        ->where('event_id', 'evt_persist_test')
+        ->first();
+
+    expect($stored)->not->toBeNull()
+        ->and($stored->type)->toBe('collection.succeeded')
+        ->and($stored->organization_id)->toBe('org_1')
+        ->and($stored->data)->toContain('payment_id')
+        ->and($stored->processed_at)->not->toBeNull();
+
+    Schema::dropIfExists('bachs_webhook_events');
+});
+
+it('stores nullable account field for connect events', function () {
+    Config::set('bachs.database.sync', true);
+
+    Schema::create('bachs_webhook_events', function ($table) {
+        $table->id();
+        $table->string('event_id')->unique();
+        $table->string('type');
+        $table->string('organization_id');
+        $table->string('account')->nullable();
+        $table->text('data');
+        $table->string('event_created_at');
+        $table->string('processed_at');
+    });
+
+    $processor = new WebhookProcessor;
+    $event = WebhookEvent::fromPayload([
+        'id' => 'evt_connect_test',
+        'type' => 'account.updated',
+        'created_at' => now()->toIso8601String(),
+        'organization_id' => 'org_1',
+        'data' => [],
+        'account' => 'org_connected',
+    ]);
+
+    $processor->process($event);
+
+    $stored = DB::table('bachs_webhook_events')
+        ->where('event_id', 'evt_connect_test')
+        ->first();
+
+    expect($stored->account)->toBe('org_connected');
+
+    Schema::dropIfExists('bachs_webhook_events');
+});
+
+it('processes events synchronously when queue is null', function () {
+    Config::set('bachs.webhook.queue', null);
+
+    $processor = new WebhookProcessor;
+    $event = WebhookEvent::fromPayload([
+        'id' => 'evt_sync_test',
+        'type' => 'collection.succeeded',
+        'created_at' => now()->toIso8601String(),
+        'organization_id' => 'org_1',
+        'data' => [],
+    ]);
+
+    Event::fake([WebhookReceived::class]);
+
+    $processor->process($event);
+
+    Event::assertDispatched(WebhookReceived::class);
+});
+
+it('generates a unique job id based on the event id', function () {
+    $event = WebhookEvent::fromPayload([
+        'id' => 'evt_unique_123',
+        'type' => 'collection.succeeded',
+        'created_at' => now()->toIso8601String(),
+        'organization_id' => 'org_1',
+        'data' => [],
+    ]);
+
+    $job = new ProcessWebhookJob($event);
+
+    expect($job->uniqueId())->toBe('bachs_webhook_evt_unique_123');
+});
+
+it('sets retry configuration on the webhook job', function () {
+    $event = WebhookEvent::fromPayload([
+        'id' => 'evt_retry_test',
+        'type' => 'collection.succeeded',
+        'created_at' => now()->toIso8601String(),
+        'organization_id' => 'org_1',
+        'data' => [],
+    ]);
+
+    $job = new ProcessWebhookJob($event);
+
+    expect($job->tries)->toBe(3)
+        ->and($job->backoff)->toBe(30);
 });

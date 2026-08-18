@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Log;
  * Job for processing webhook events on a queue.
  *
  * This job is retry-safe because:
- * 1. The event ID is checked for duplicates before processing
- * 2. Database transactions ensure atomicity
+ * 1. The event ID is checked for duplicates before processing (both at
+ *    dispatch time in the controller and here in the job for race conditions)
+ * 2. The duplicate check and persistence happen inside a transaction
  * 3. Failed jobs can be retried without side effects
  */
 class ProcessWebhookJob implements ShouldQueue
@@ -51,5 +52,15 @@ class ProcessWebhookJob implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /**
+     * The unique ID of the job (used for idempotent dispatch).
+     *
+     * Ensures the same event cannot be queued twice concurrently.
+     */
+    public function uniqueId(): string
+    {
+        return 'bachs_webhook_'.$this->event->id();
     }
 }

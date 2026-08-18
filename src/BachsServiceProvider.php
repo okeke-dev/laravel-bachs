@@ -32,6 +32,10 @@ class BachsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/bachs.php' => $this->app->configPath('bachs.php'),
             ], 'bachs-config');
+
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'bachs-migrations');
         }
 
         $this->registerDefaultResourceClient();

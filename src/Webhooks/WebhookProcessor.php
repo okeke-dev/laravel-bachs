@@ -108,7 +108,7 @@ class WebhookProcessor
                 'organization_id' => $event->organizationId(),
                 'account' => $event->account(),
                 'data' => json_encode($event->data()),
-                'created_at' => $event->createdAt(),
+                'event_created_at' => $event->createdAt(),
                 'processed_at' => now()->toIso8601String(),
             ]);
     }

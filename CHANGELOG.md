@@ -94,6 +94,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 25 typed Laravel events for all Bachs webhook event types.
   - Configurable route path, middleware, queue connection, and tolerance.
   - Safe logging (never logs secrets or sensitive data).
+- **Webhook persistence & idempotency** — Production-grade event storage:
+  - Publishable migration for `bachs_webhook_events` table
+    (`php artisan vendor:publish --tag=bachs-migrations`).
+  - Event deduplication via `event_id` unique constraint with duplicate
+    detection in `WebhookProcessor` (skips re-dispatch for known events).
+  - Queue name configuration (`BACHS_WEBHOOK_QUEUE_NAME`) for separating
+    webhook processing from other queued work.
+  - `ProcessWebhookJob` unique ID for queue-level deduplication, retry-safe
+    processing with configurable attempts and backoff.
+  - `WebhookController` acknowledges delivery (200) before dispatching to
+    queue, preventing timeout-driven retries from Bachs.
 
 ### Fixed
 
