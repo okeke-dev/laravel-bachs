@@ -75,6 +75,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `cancel()`. `Subscription` DTO with status helpers (`isActive()`,
   `isTrialing()`, `isPastDue()`, `isCanceled()`, `isPaused()`), billing cycle,
   and period tracking.
+- **Payments** — `Payments` resource with `list()`, `get()`, and `getByCharge()`.
+  `Payment` DTO with status helpers (`isSucceeded()`, `isProcessing()`,
+  `isFailed()`, `isRefunded()`, `isPartiallyRefunded()`, `isExpired()`,
+  `isCancelled()`, `isRefundable()`) and `refund()` shortcut method.
+- **Refunds** — `Refunds` resource with `create()`, `list()`, `get()`, and
+  `getByCharge()`. `Refund` DTO with status helpers (`isProcessing()`,
+  `isSuccess()`, `isFailed()`) and fee tracking.
 
 ### Fixed
 
