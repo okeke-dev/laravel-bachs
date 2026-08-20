@@ -2,6 +2,7 @@
 
 namespace OkekeDev\Bachs\View\Components;
 
+use Illuminate\Support\Facades\View;
 use Illuminate\View\Component;
 use OkekeDev\Bachs\Resources\CheckoutSessions;
 
@@ -63,8 +64,8 @@ class Subscribe extends Component
         return $params;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
-        return view('bachs::components.subscribe');
+        return View::make('bachs::components.subscribe');
     }
 }

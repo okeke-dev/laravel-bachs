@@ -2,6 +2,7 @@
 
 namespace OkekeDev\Bachs\View\Components;
 
+use Illuminate\Support\Facades\View;
 use Illuminate\View\Component;
 use OkekeDev\Bachs\Resources\CheckoutSessions;
 
@@ -61,8 +62,8 @@ class CheckoutOverlay extends Component
         return $params;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
-        return view('bachs::components.checkout-overlay');
+        return View::make('bachs::components.checkout-overlay');
     }
 }
