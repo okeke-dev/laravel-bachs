@@ -28,6 +28,8 @@ class BachsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerRoutes();
+        $this->registerViews();
+        $this->registerBladeComponents();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -37,9 +39,33 @@ class BachsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../database/migrations' => database_path('migrations'),
             ], 'bachs-migrations');
+
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/bachs'),
+            ], 'bachs-views');
         }
 
         $this->registerDefaultResourceClient();
+    }
+
+    /**
+     * Register the package view namespace.
+     */
+    protected function registerViews(): void
+    {
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'bachs');
+    }
+
+    /**
+     * Register Blade components.
+     */
+    protected function registerBladeComponents(): void
+    {
+        $this->loadViewComponentsAs('bachs', [
+            'checkout' => View\Components\Checkout::class,
+            'checkout-overlay' => View\Components\CheckoutOverlay::class,
+            'subscribe' => View\Components\Subscribe::class,
+        ]);
     }
 
     /**

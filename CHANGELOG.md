@@ -105,6 +105,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     processing with configurable attempts and backoff.
   - `WebhookController` acknowledges delivery (200) before dispatching to
     queue, preventing timeout-driven retries from Bachs.
+- **Blade integration** — Accessible, unstyled Blade components for checkout:
+  - `<x-bachs::checkout>` — Hosted checkout redirect link with product,
+    customer/email, success/cancel URL support.
+  - `<x-bachs::checkout-overlay>` — Inline modal checkout with iframe,
+    ARIA dialog attributes, and close button.
+  - `<x-bachs::subscribe>` — Subscription-specific checkout with
+    session_mode PAYMENT.
+  - All components: semantic HTML, ARIA roles/labels, configurable CSS
+    classes, slot content support.
+  - Publishable views via `php artisan vendor:publish --tag=bachs-views`.
 
 ### Fixed
 
