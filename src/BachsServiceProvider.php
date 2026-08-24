@@ -43,6 +43,8 @@ class BachsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../resources/views' => resource_path('views/vendor/bachs'),
             ], 'bachs-views');
+
+            $this->registerCommands();
         }
 
         $this->registerDefaultResourceClient();
@@ -65,6 +67,21 @@ class BachsServiceProvider extends ServiceProvider
             'checkout' => View\Components\Checkout::class,
             'checkout-overlay' => View\Components\CheckoutOverlay::class,
             'subscribe' => View\Components\Subscribe::class,
+        ]);
+    }
+
+    /**
+     * Register the package Artisan commands.
+     */
+    protected function registerCommands(): void
+    {
+        $this->commands([
+            Console\Commands\InstallCommand::class,
+            Console\Commands\HealthCommand::class,
+            Console\Commands\WebhookTestCommand::class,
+            Console\Commands\WebhookListCommand::class,
+            Console\Commands\WebhookInspectCommand::class,
+            Console\Commands\WebhookReplayCommand::class,
         ]);
     }
 
