@@ -105,6 +105,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     processing with configurable attempts and backoff.
   - `WebhookController` acknowledges delivery (200) before dispatching to
     queue, preventing timeout-driven retries from Bachs.
+- **Artisan tooling** — Production-ready CLI commands:
+  - `bachs:install` — Publish config, migrations, and views in one step
+  - `bachs:health` — Verify API connectivity, config, and database status
+  - `bachs:webhook:test` — Send test webhook events to a URL
+  - `bachs:webhook:list` — List stored webhook events with filters
+  - `bachs:webhook:inspect` — Inspect a specific webhook event payload
+  - `bachs:webhook:replay` — Replay a stored webhook event
+- **Local synchronized models** — Opt-in database mirrors for billing resources:
+  - `BachsCustomer`, `BachsProduct`, `BachsPayment`, `BachsSubscription` Eloquent models
+  - Publishable migrations (`php artisan vendor:publish --tag=bachs-migrations`)
+  - Configurable table names and database connection (`bachs.database.*`)
+  - Webhook-driven sync via `WebhookSyncer` — upserts on every relevant event
+  - Status helper methods (`isActive()`, `isTrialing()`, `isCanceled()`, etc.)
+  - JSON column casting, model relations, and PHPDoc annotations
+  - Container singletons (`bachs.customer`, `bachs.product`, etc.)
+  - Full test coverage (13 tests, 48 assertions)
 - **Blade integration** — Accessible, unstyled Blade components for checkout:
   - `<x-bachs::checkout>` — Hosted checkout redirect link with product,
     customer/email, success/cancel URL support.
