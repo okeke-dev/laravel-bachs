@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+_No changes yet._
+
+## v0.1.0 — 2026-08-25
+
 ### Added
 
 - **Laravel container** — `BachsServiceProvider`, `BachsManager`, `Bachs` facade,
@@ -33,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing hardening** — Comprehensive test coverage additions:
   - Fuzz/payload tests: empty data, deeply nested structures, Unicode, long strings, special characters, booleans, arrays, zeros, empty strings.
   - Retry behavior tests: 502/503/504 retries, non-retried status codes (400/403/404/409/422), `retry.times=0`, DELETE/PATCH retry semantics, connection failure retries, exhausted retry error details.
-  - Unit tests for `BachsRequest` (safe methods, idempotency key, properties) and `BachsResponse` (status, JSON access, headers, rate limit metadata).
+  - Unit tests for `BachsRequest` and `BachsResponse`.
   - Exception class tests (`BachsApiException`, `BachsRateLimitException`, `BachsValidationException`, `BachsNetworkException`, `BachsInvalidArgumentException`).
   - CI: composer dependency caching across all jobs.
 - **Retry backoff** — retries now grow exponentially (`retry.multiplier`,
@@ -49,26 +53,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `BachsResponse::toArray()` for normalized payload access.
 - **Resource layer groundwork** — `BachsResource` base that seeds the default
   connection's client for static resource calls, plus `PaginatedCollection`, a
-  Laravel collection carrying Bachs pagination metadata (`hasMore()`,
-  `nextCursor()`, `prevCursor()`, `limit()`, `offset()`, `returned()`,
-  `total()`, and metadata-preserving `map()`).
+  Laravel collection carrying Bachs pagination metadata.
 - **Products resource** — `Products::create()`, `list()`, `get()`, `update()`,
-  `archive()`, and `unarchive()` (Tier A passthrough; DTO returns arrive in
-  milestone 4). Mutations accept an optional idempotency key.
+  `archive()`, and `unarchive()`. Mutations accept an optional idempotency key.
 - **Currencies resource** — `Currencies::supported()` and
   `Currencies::payoutSupported()`.
 - **Balances resource** — `Balances::get()`.
 - **PaymentMethods resource** — `PaymentMethods::list()` (paginated) and
   `PaymentMethods::rails()`.
 - **Media resource** — `Media::upload()`, `get()`, and `delete()`, backed by new
-  multipart upload support in the transport (`BachsClient::upload()` /
-  `BachsRequest` attachments); invalid files are rejected up front with
-  `BachsInvalidArgumentException`.
+  multipart upload support in the transport.
 - **ProductGroups resource** — `ProductGroups::create()`, `list()`, `get()`,
   `update()`, and `delete()`. Mutations accept an optional idempotency key.
 - **Customers resource** — `Customers::create()`, `list()`, `get()`, `update()`,
   and `createPortalSession()`. Tier A passthrough with `Customer` and
-  `PortalSession` DTOs. Mutations accept an optional idempotency key.
+  `PortalSession` DTOs.
 - **Billable trait** — `Concerns\Billsable` for Eloquent models: customer
   association (`createAsBachsCustomer()`, `bachsCustomer()`, `updateBachsCustomer()`),
   billing portal (`billingPortalUrl()`), checkout (`checkout()`), and
@@ -78,19 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CheckoutSession` DTO with status helpers and `redirect()` method, and
   `$user->checkout()` on the Billable trait.
 - **Subscriptions** — `Subscriptions` resource with `list()`, `get()`, `update()`,
-  and `cancel()`. `Subscription` DTO with status helpers (`isActive()`,
-  `isTrialing()`, `isPastDue()`, `isCanceled()`, `isPaused()`), billing cycle,
-  and period tracking.
+  and `cancel()`. `Subscription` DTO with status helpers and period tracking.
 - **Payments** — `Payments` resource with `list()`, `get()`, and `getByCharge()`.
-  `Payment` DTO with status helpers (`isSucceeded()`, `isProcessing()`,
-  `isFailed()`, `isRefunded()`, `isPartiallyRefunded()`, `isExpired()`,
-  `isCancelled()`, `isRefundable()`) and `refund()` shortcut method.
+  `Payment` DTO with status helpers and `refund()` shortcut method.
 - **Refunds** — `Refunds` resource with `create()`, `list()`, `get()`, and
-  `getByCharge()`. `Refund` DTO with status helpers (`isProcessing()`,
-  `isSuccess()`, `isFailed()`) and fee tracking.
+  `getByCharge()`. `Refund` DTO with status helpers and fee tracking.
 - **Webhooks (delivery)** — Production-grade webhook system:
   - `Webhooks\SignatureVerifier` — HMAC-SHA256 signature verification with
-    constant-time comparison and replay protection via timestamp tolerance.
+    constant-time comparison and replay protection.
   - `Webhooks\WebhookEvent` — Parsed event envelope DTO.
   - `Webhooks\WebhookProcessor` — Event identification, persistence, and
     duplicate detection with typed Laravel event dispatch.
@@ -99,54 +93,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     acknowledgment (200) before processing.
   - 25 typed Laravel events for all Bachs webhook event types.
   - Configurable route path, middleware, queue connection, and tolerance.
-  - Safe logging (never logs secrets or sensitive data).
 - **Webhook persistence & idempotency** — Production-grade event storage:
-  - Publishable migration for `bachs_webhook_events` table
-    (`php artisan vendor:publish --tag=bachs-migrations`).
-  - Event deduplication via `event_id` unique constraint with duplicate
-    detection in `WebhookProcessor` (skips re-dispatch for known events).
-  - Queue name configuration (`BACHS_WEBHOOK_QUEUE_NAME`) for separating
-    webhook processing from other queued work.
-  - `ProcessWebhookJob` unique ID for queue-level deduplication, retry-safe
-    processing with configurable attempts and backoff.
-  - `WebhookController` acknowledges delivery (200) before dispatching to
-    queue, preventing timeout-driven retries from Bachs.
+  - Publishable migration for `bachs_webhook_events` table.
+  - Event deduplication via `event_id` unique constraint.
+  - Queue name configuration for separating webhook processing.
+  - `ProcessWebhookJob` unique ID for queue-level deduplication.
 - **Artisan tooling** — Production-ready CLI commands:
-  - `bachs:install` — Publish config, migrations, and views in one step
-  - `bachs:health` — Verify API connectivity, config, and database status
-  - `bachs:webhook:test` — Send test webhook events to a URL
-  - `bachs:webhook:list` — List stored webhook events with filters
-  - `bachs:webhook:inspect` — Inspect a specific webhook event payload
-  - `bachs:webhook:replay` — Replay a stored webhook event
+  - `bachs:install` — Publish config, migrations, and views in one step.
+  - `bachs:health` — Verify API connectivity, config, and database status.
+  - `bachs:webhook:test` — Send test webhook events to a URL.
+  - `bachs:webhook:list` — List stored webhook events with filters.
+  - `bachs:webhook:inspect` — Inspect a specific webhook event payload.
+  - `bachs:webhook:replay` — Replay a stored webhook event.
 - **Local synchronized models** — Opt-in database mirrors for billing resources:
-  - `BachsCustomer`, `BachsProduct`, `BachsPayment`, `BachsSubscription` Eloquent models
-  - Publishable migrations (`php artisan vendor:publish --tag=bachs-migrations`)
-  - Configurable table names and database connection (`bachs.database.*`)
-  - Webhook-driven sync via `WebhookSyncer` — upserts on every relevant event
-  - Status helper methods (`isActive()`, `isTrialing()`, `isCanceled()`, etc.)
-  - JSON column casting, model relations, and PHPDoc annotations
-  - Container singletons (`bachs.customer`, `bachs.product`, etc.)
-  - Full test coverage (13 tests, 48 assertions)
+  - `BachsCustomer`, `BachsProduct`, `BachsPayment`, `BachsSubscription` Eloquent models.
+  - Publishable migrations and configurable table names.
+  - Webhook-driven sync via `WebhookSyncer` — upserts on every relevant event.
 - **Blade integration** — Accessible, unstyled Blade components for checkout:
-  - `<x-bachs::checkout>` — Hosted checkout redirect link with product,
-    customer/email, success/cancel URL support.
-  - `<x-bachs::checkout-overlay>` — Inline modal checkout with iframe,
-    ARIA dialog attributes, and close button.
-  - `<x-bachs::subscribe>` — Subscription-specific checkout with
-    session_mode PAYMENT.
-  - All components: semantic HTML, ARIA roles/labels, configurable CSS
-    classes, slot content support.
-  - Publishable views via `php artisan vendor:publish --tag=bachs-views`.
+  - `<x-bachs::checkout>` — Hosted checkout redirect.
+  - `<x-bachs::checkout-overlay>` — Inline modal checkout with iframe.
+  - `<x-bachs::subscribe>` — Subscription-specific checkout.
+- **Documentation & OSS polish** — Full README with usage examples, GitHub
+  issue/PR templates, CODEOWNERS, Dependabot, FUNDING, .editorconfig,
+  example files, and CHANGELOG.
 
 ### Fixed
 
-- **CI** — Laravel 13 test rows now run on PHP 8.4 (Pest 5 and
-  `pest-plugin-laravel` v5 require PHP >= 8.4), and `orchestra/testbench` is
-  pinned with `--dev` so it stays in `require-dev` instead of leaking into the
-  runtime dependencies.
+- **CI** — Laravel 13 test rows now run on PHP 8.4, and `orchestra/testbench` is
+  pinned with `--dev`.
 - **Composer constraints** — widened to `pestphp/pest: ^3.8|^5.0` and
-  `pestphp/pest-plugin-laravel: ^3.2|^5.0` so Laravel 12 uses Pest 3 and
-  Laravel 13 uses Pest 5.
+  `pestphp/pest-plugin-laravel: ^3.2|^5.0`.
 
 _No stable API is offered yet. Everything above is subject to change while the
 package is in early development (`0.x`)._

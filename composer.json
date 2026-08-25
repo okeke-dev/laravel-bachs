@@ -12,6 +12,13 @@
     ],
     "license": "MIT",
     "type": "library",
+    "homepage": "https://github.com/okeke-dev/laravel-bachs",
+    "support": {
+        "issues": "https://github.com/okeke-dev/laravel-bachs/issues",
+        "source": "https://github.com/okeke-dev/laravel-bachs",
+        "docs": "https://github.com/okeke-dev/laravel-bachs#readme",
+        "changelog": "https://github.com/okeke-dev/laravel-bachs/blob/main/CHANGELOG.md"
+    },
     "authors": [
         {
             "name": "Okeke Chimezie Glory",
