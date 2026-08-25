@@ -29,7 +29,7 @@
 | 16 | Marketplace functionality | Connected accounts, capabilities, tasks/checklist/requirements, account links, uploads, transfers, payouts/withdrawals, disputes, conversions, organizations, split payments (Tier A) | ⬜ |
 | 17 | Testing hardening | Coverage sweep, regression tests from bugs, fuzz-ish payload tests, rate-limit/retry tests, matrix CI hardening | ✅ |
 | 18 | Documentation & OSS polish | Full docs set, README, badges, changelog, issue/PR templates, examples | ✅ |
-| 19 | Release candidate | Semver tagging, publish checklist, Packagist metadata, final audit (secrets, security) | ⬜ |
+| 19 | Release candidate | Semver tagging, publish checklist, Packagist metadata, final audit (secrets, security) | ✅ |
 
 ---
 

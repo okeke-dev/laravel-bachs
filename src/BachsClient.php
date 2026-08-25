@@ -36,6 +36,9 @@ class BachsClient
 
     /**
      * The secret key used for authentication.
+     *
+     * @internal This method exposes the raw API secret. Do not log, serialize,
+     *           or display the return value.
      */
     public function secret(): string
     {
