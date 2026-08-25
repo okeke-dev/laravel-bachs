@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shape, idempotency, retry policy, exception mapping, base URL resolution).
 - **Quality gates** — Laravel Pint (style) and PHPStan level 6 (types) wired
   into CI across PHP 8.2–8.4 and Laravel 12–13.
+- **Testing hardening** — Comprehensive test coverage additions:
+  - Fuzz/payload tests: empty data, deeply nested structures, Unicode, long strings, special characters, booleans, arrays, zeros, empty strings.
+  - Retry behavior tests: 502/503/504 retries, non-retried status codes (400/403/404/409/422), `retry.times=0`, DELETE/PATCH retry semantics, connection failure retries, exhausted retry error details.
+  - Unit tests for `BachsRequest` (safe methods, idempotency key, properties) and `BachsResponse` (status, JSON access, headers, rate limit metadata).
+  - Exception class tests (`BachsApiException`, `BachsRateLimitException`, `BachsValidationException`, `BachsNetworkException`, `BachsInvalidArgumentException`).
+  - CI: composer dependency caching across all jobs.
 - **Retry backoff** — retries now grow exponentially (`retry.multiplier`,
   `retry.max_sleep_ms`) and honor `Retry-After` / `X-RateLimit-Reset` on 429
   (`Support\RetryDelay`).
