@@ -21,9 +21,8 @@ customers, subscriptions, checkout sessions, payments, refunds, payment methods,
 webhooks, and more — with a `Cashier`-style API that fits naturally into your
 application.
 
-> **Status:** this package is in early development (`0.x`). The API is not
-> stable yet. See [`CHANGELOG.md`](CHANGELOG.md) and the open issues for
-> progress.
+> **Requires PHP ^8.2 and Laravel ^12.0|^13.0.** See
+> [`CHANGELOG.md`](CHANGELOG.md) for the latest changes.
 
 ## Features
 

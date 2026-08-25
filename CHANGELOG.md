@@ -124,5 +124,5 @@ _No changes yet._
 - **Composer constraints** — widened to `pestphp/pest: ^3.8|^5.0` and
   `pestphp/pest-plugin-laravel: ^3.2|^5.0`.
 
-_No stable API is offered yet. Everything above is subject to change while the
-package is in early development (`0.x`)._
+_The API may change in future `0.x` releases. See [`RELEASE.md`](RELEASE.md)
+for the versioning policy._
