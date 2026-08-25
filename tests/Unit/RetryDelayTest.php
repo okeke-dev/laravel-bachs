@@ -26,7 +26,7 @@ it('caps the backoff at the configured maximum', function () {
 });
 
 it('honors Retry-After seconds on a 429 response', function () {
-    $response = bachsRetryResponse(429, ['Retry-After' => 3]);
+    $response = bachsRetryResponse(429, ['Retry-After' => '3']);
 
     expect(RetryDelay::milliseconds(1, $response, []))->toBe(3000);
 });

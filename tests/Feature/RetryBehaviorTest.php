@@ -162,7 +162,7 @@ it('retries 429 on mutation with idempotency key', function () {
         $attempts++;
 
         return $attempts < 2
-            ? Http::response(['detail' => 'Too many requests'], 429, ['Retry-After' => 0])
+            ? Http::response(['detail' => 'Too many requests'], 429, ['Retry-After' => '0'])
             : Http::response(['customer_id' => 'cust_123'], 201);
     });
 

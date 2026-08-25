@@ -211,7 +211,7 @@ it('exposes retry-after on rate limit errors', function () {
         '*' => Http::response([
             'detail' => 'Too many requests',
             'error_code' => 'TOO_MANY_REQUESTS',
-        ], 429, ['Retry-After' => 3]),
+        ], 429, ['Retry-After' => '3']),
     ]);
 
     try {
@@ -315,7 +315,7 @@ it('waits for Retry-After before retrying a rate-limited request', function () {
             ? Http::response([
                 'detail' => 'Too many requests',
                 'error_code' => 'TOO_MANY_REQUESTS',
-            ], 429, ['Retry-After' => 1])
+            ], 429, ['Retry-After' => '1'])
             : Http::response(['items' => []], 200);
     });
 
